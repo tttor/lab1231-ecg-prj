@@ -9,3 +9,10 @@ project (HELLO)
 # the project's entire directory structure. 
 add_subdirectory (Hello) 
 add_subdirectory (Demo)
+
+# Print out all accessible variables in a script, 
+# see http://stackoverflow.com/questions/9298278/cmake-print-out-all-accessible-variables-in-a-script
+get_cmake_property(_variableNames VARIABLES)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
