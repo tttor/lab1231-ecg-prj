@@ -1,5 +1,10 @@
 function codec_all
 
+root_dataset_path = '~/lab1231-ecg-prj/dataset/';
+incartdb_dataset_path = 'incartdb/';
+addpath (strcat(root_dataset_path,incartdb_dataset_path));
+
+
 tic;
 
     group = 0; % apply lead grouping?
@@ -7,7 +12,8 @@ tic;
     res   = 0; % apply residual calculation?
     sample_num = 128; % number of sample per beat on normalized ECG
     
-    rec_name = {'I01m3min','I12m3min','I12m10sec'};
+    %rec_name = {'I01m3min','I12m3min','I12m10sec'};
+    rec_name = {'I12m'};
     
     %proc_list = [1 8 9 12 13 14 18 19 22 27 33 34 36 39 42 43]
     %new_proc_list = [5! 6! 10 11 15 16! 20! 21! 23! 24 25! 26! 28! 29! 30! 
@@ -16,7 +22,7 @@ tic;
                    
     %proc_list = [10 11 15 24 31 38 51 53 54 55 63 65];
     %hang on records 51 53
-    proc_list = [2];
+    proc_list = [1];
     
     %CR = [4 8 12 16 20 24 28 32 36 40];
     CR = [8];
@@ -79,11 +85,11 @@ tic;
                 res_fname = '';
             end
             
-            folder_name = 'D:\belajar\term8\TA\report.20140424\workspace\matlab\output';
+           % folder_name = 'D:\belajar\term8\TA\report.20140424\workspace\matlab\output';
             %folder_name = '/Volumes/Data/Data/Sani/Dropbox/Data/S3/Kuliah/Semester 5/Sandwich/Multilead ECG compression/Experiment/First 3min/Output/';
-            f_name = [folder_name char(rec_name(k)) '-' num2str(sample_num) ...
-                      group_fname order_fname res_fname '-prd.txt'];
-            save(f_name,'prd_arr','-ascii','-tabs');
+            %f_name = [folder_name char(rec_name(k)) '-' num2str(sample_num) ...
+             %         group_fname order_fname res_fname '-prd.txt'];
+            %save(f_name,'prd_arr','-ascii','-tabs');
             
         catch err
             rethrow(err);
