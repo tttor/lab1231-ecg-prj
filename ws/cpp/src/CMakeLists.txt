@@ -1,18 +1,18 @@
-# The name of our project is "HELLO". CMakeLists files in this project can 
-# refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
-# to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
 cmake_minimum_required (VERSION 2.6) 
-project (HELLO) 
+project (LAB1231_ECG_PRJ) 
 
-# Recurse into the "Hello" and "Demo" subdirectories. This does not actually 
-# cause another cmake executable to run. The same process will walk through 
-# the project's entire directory structure. 
-add_subdirectory (Hello) 
-add_subdirectory (Demo)
+add_subdirectory (main)
+add_subdirectory (pre)
 
-# Print out all accessible variables in a script, 
-# see http://stackoverflow.com/questions/9298278/cmake-print-out-all-accessible-variables-in-a-script
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+## add the install targets
+#set(CMAKE_INSTALL_PREFIX /home/tor/tmp) # used to determine the root of where the files will be installed.
+#install (TARGETS Tutorial DESTINATION bin)
+#install (FILES "${LAB1231_ECG_PRJ_BINARY_DIR}/TutorialConfig.h" DESTINATION include)
+
+## Print out all accessible variables in a script, 
+## see http://stackoverflow.com/questions/9298278/cmake-print-out-all-accessible-variables-in-a-script
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+    #message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+
