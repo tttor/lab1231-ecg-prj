@@ -1,0 +1,1 @@
+add_library (ecg_signal_preprocessing ecg_signal_preprocessor.cc)
