@@ -292,13 +292,16 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     else
         res_fname = '';
     end
-    folder_name = 'D:\belajar\term8\TA\report.20140424\workspace\matlab\output';
-    %folder_name = '/Volumes/Data/Data/Sani/Dropbox/Data/S3/Kuliah/Semester 5/Sandwich/Multilead ECG compression/Experiment/First 3min/Output/';
-    f_name = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
+    folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+    f_name = [folder_name 'G-' rec_name '-' num2str(sample_num) '-' num2str(CR) ...
               '.' num2str(rep) group_fname order_fname res_fname '-out.mat'];
     save(f_name,'recg8_pre');
     
-    save('var.mat');
+    
+    %f_name_all = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
+     %         '.' num2str(rep) group_fname order_fname res_fname '-all.mat'];
+    
+   % save(f_name_all,'var');
     %whos
    
 %toc
