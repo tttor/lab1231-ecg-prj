@@ -1,8 +1,9 @@
 function codec_all
 
-root_dataset_path = '~/lab1231-ecg-prj/dataset/';
-incartdb_dataset_path = 'incartdb/';
-addpath (strcat(root_dataset_path,incartdb_dataset_path));
+%setting path octave only
+%root_dataset_path = '~/lab1231-ecg-prj/dataset/';
+%incartdb_dataset_path = 'incartdb/';
+%addpath (strcat(root_dataset_path,incartdb_dataset_path));
 
 
 tic;
@@ -85,11 +86,10 @@ tic;
                 res_fname = '';
             end
             
-           % folder_name = 'D:\belajar\term8\TA\report.20140424\workspace\matlab\output';
-            %folder_name = '/Volumes/Data/Data/Sani/Dropbox/Data/S3/Kuliah/Semester 5/Sandwich/Multilead ECG compression/Experiment/First 3min/Output/';
-            %f_name = [folder_name char(rec_name(k)) '-' num2str(sample_num) ...
-             %         group_fname order_fname res_fname '-prd.txt'];
-            %save(f_name,'prd_arr','-ascii','-tabs');
+            folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+            f_name = [ folder_name 'G-' char(rec_name(k)) '-' num2str(sample_num) ...
+                      group_fname order_fname res_fname '-prd.txt'];
+            save(f_name,'prd_arr','-ascii','-tabs');
             
         catch err
             rethrow(err);
