@@ -35,7 +35,7 @@ tic;
     end
     
     for k = proc_list
-        try
+       % try
             clc;
             fprintf('%s\n',cell2mat(rec_name(k)));
             load(char(rec_name(k)));
@@ -86,18 +86,19 @@ tic;
                 res_fname = '';
             end
             
-            folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+            %folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+            folder_name = '/home/gj/lab1231-ecg-prj/ws/octave/result-exp/';
+            
             f_name = [ folder_name 'G-' char(rec_name(k)) '-' num2str(sample_num) ...
                       group_fname order_fname res_fname '-prd.txt'];
             save(f_name,'prd_arr','-ascii','-tabs');
             
-        catch err
-            rethrow(err);
-        end
+        %catch err
+       %     rethrow(err);
+       % end
     end 
     
 toc;
     
 end
-
 

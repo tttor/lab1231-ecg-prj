@@ -9,5 +9,5 @@ addpath("./test")
 addpath("./unknown")
 addpath("./util")
 addpath("./wavelet-dec")
-
+%addpath("./wavelet")
 

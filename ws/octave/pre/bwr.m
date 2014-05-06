@@ -2,6 +2,7 @@ function [ecg_out, base] = bwr(ecg_in, wv_name, N, verbose)
 % Remove baseline wander using Sargolzaei approach
 
     [c,l] = wavedec(ecg_in,N,wv_name);
+    %[c,l] = dwt(ecg_in,N,wv_name);
     en = zeros(N);
     for k=1:N
         % wavelet energy = norm
