@@ -292,7 +292,9 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     else
         res_fname = '';
     end
-    folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+    %folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
+    folder_name = '/home/gj/lab1231-ecg-prj/ws/octave/result-exp/';
+   
     f_name = [folder_name 'G-' rec_name '-' num2str(sample_num) '-' num2str(CR) ...
               '.' num2str(rep) group_fname order_fname res_fname '-out.mat'];
     save(f_name,'recg8_pre');
