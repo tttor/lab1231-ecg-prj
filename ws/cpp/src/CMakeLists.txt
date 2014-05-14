@@ -4,6 +4,14 @@ project (LAB1231_ECG_PRJ)
 add_subdirectory (main)
 add_subdirectory (pre)
 add_subdirectory (util)
+add_subdirectory (array-const)
+add_subdirectory (norm)
+
+
+find_package( PkgConfig REQUIRED)
+pkg_check_modules( gsl REQUIRED gsl )
+
+
 
 ## add the install targets
 #set(CMAKE_INSTALL_PREFIX /home/tor/tmp) # used to determine the root of where the files will be installed.

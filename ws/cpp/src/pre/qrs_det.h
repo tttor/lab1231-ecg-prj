@@ -16,7 +16,7 @@ float * lowPass(float *sign0, int nsamp);
 float * highPass(double *sign0, int nsamp);
 int * QRS(float *lowPass, int nsamp);
 int * getR(int *QRS, int sample_number_tested);
-int * getRpeak(int *rr, int sample_number_tested);
+int * getRR(int *rr, int sample_number_tested);
 
 
 //fungsi pembantu qrs process manggil program
@@ -248,7 +248,7 @@ int * getR(int *QRS, int sample_number_tested){
 }
 
 //get array r-peak
-int * getRpeak(int *rr, int sample_number_tested){
+int * getRR(int *rr, int sample_number_tested){
 	int * rpeak = (int *) malloc(sample_number_tested * sizeof(int));
 	int i,j;
 

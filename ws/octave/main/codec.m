@@ -28,8 +28,8 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     
     lead_num       = 8;
     beat_num       = sample_num; % number of beat per frame on normalized ECG
-    %tot_sample_num = 46260;
-    tot_sample_num = 2570;
+    tot_sample_num = 46260;
+    %tot_sample_num = 2570;
     resolution     = 12;
     max_bits       = tot_sample_num*lead_num*resolution/CR;
     wv_name        = 'bior4.4';
@@ -38,6 +38,7 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     % ====================================================================
     % PREPROCESSING
     % ====================================================================
+    
     
     fprintf('\nPREPROCESSING =========================================\n');
     base = 0;
@@ -49,6 +50,11 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     % Physical unit conversion, BWR, LPF
     [ecg8_pre,rr_ann,baseline] = preprocess(ecg8,RR_ANN_IN,base,gain);
     
+    % ====================================================================
+    % OVERWRITE WITH PREPROCESING FROM CC
+    % ====================================================================
+    ecg8_pre_cpp = csvread(strcat(rec_name,'.clean.csv'));
+    ecg8_pre = ecg8_pre_cpp';
     
     % ====================================================================
     % COMPRESSION STAGE
@@ -58,6 +64,12 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
 
     % Beat normalization
     ecg8_scl = scale_beat_all(ecg8_pre,rr_ann,sample_num);
+    
+     % ====================================================================
+    % OVERWRITE WITH PREPROCESING FROM CC
+    % ====================================================================
+    ecg8_scl_cpp = csvread(strcat(rec_name,'.normalize.csv'));
+    ecg8_scl = ecg8_scl_cpp';
     
     
     % Multi lead to single lead ECG conversion
@@ -293,9 +305,9 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
         res_fname = '';
     end
     %folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
-    folder_name = '/home/gj/lab1231-ecg-prj/ws/octave/result-exp/';
+    folder_name = '/home/gj/lab1231-ecg-prj/dataset/graf-exp/2D/first3min/128/none/';
    
-    f_name = [folder_name 'G-' rec_name '-' num2str(sample_num) '-' num2str(CR) ...
+    f_name = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
               '.' num2str(rep) group_fname order_fname res_fname '-out.mat'];
     save(f_name,'recg8_pre');
     
@@ -303,7 +315,8 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     %f_name_all = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
      %         '.' num2str(rep) group_fname order_fname res_fname '-all.mat'];
     
-   % save(f_name_all,'var');
+    %save(f_name_all,'var');
+   % save('var.mat');
     %whos
    
 %toc

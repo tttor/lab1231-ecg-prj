@@ -2,6 +2,11 @@ function [ all_prd_table ] = get_table_PRD
 %GET_TABLEII Summary of this function goes here
 %   Detailed explanation goes here
 % @author : GrafikaJ
+% need : - file data asli exp: I01m.mat
+%        - file data hasil running exp: I01-128-4.1-out.mat
+%                                       rec_name-sample_num-CR.repeat.mat
+%
+
 
 
     group = 0; % apply lead grouping?
@@ -19,8 +24,16 @@ function [ all_prd_table ] = get_table_PRD
                 'I61m','I62m','I63m','I64m','I65m','I66m','I67m','I68m','I69m','I70m',...
                 'I71m','I72m','I73m','I74m','I75m'};
     
+    %{
     proc_list = [1 8 9 12 13 14 18 19 22 27 33 34 36 39 42 43];
     CR = [4 8 12 16 20 24];
+   %}
+    
+    %buat ujicoba             
+    proc_list = [1];
+    CR = [4];
+    
+    
     res_prd_all = 0;
     mean_all_prd_table =0;
     
