@@ -751,9 +751,11 @@ main (int argc, char **argv)
 	 * WRITE BWR TO FILE
 	 * */	
 	write_multichannel_arranged_data_to_file(fname,".bwr",sample_number_tested,  bwr_profile_multilead, verbose_mode);
+	
+
+
 	printf("\nPreprocess is done\n");
 	printf("\nStart R-R detection\n");
-	
 	
 	//dapat rpeak
 	rpeak = qrs_proc(data_clean, sample_number_tested);

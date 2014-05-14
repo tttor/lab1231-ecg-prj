@@ -18,6 +18,9 @@
 //gsl lib
 #include <gsl/gsl_wavelet.h>
 #include <gsl/gsl_statistics_double.h>	//for mean and other
+//#include </usr/local/include/gsl/gsl_wavelet.h>
+//#include </usr/local/include/gsl/gsl_statistics_double.h>		
+
 
 /*
  * proto function

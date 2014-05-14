@@ -14,7 +14,7 @@ tic;
     sample_num = 128; % number of sample per beat on normalized ECG
     
     %rec_name = {'I01m3min','I12m3min','I12m10sec'};
-    rec_name = {'I12m'};
+    rec_name = {'I01m'};
     
     %proc_list = [1 8 9 12 13 14 18 19 22 27 33 34 36 39 42 43]
     %new_proc_list = [5! 6! 10 11 15 16! 20! 21! 23! 24 25! 26! 28! 29! 30! 
@@ -26,7 +26,7 @@ tic;
     proc_list = [1];
     
     %CR = [4 8 12 16 20 24 28 32 36 40];
-    CR = [8];
+    CR = [4];
     
     if order == 1
         repeat = 3; % reduce variation of random initialization on clustering
@@ -87,9 +87,9 @@ tic;
             end
             
             %folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
-            folder_name = '/home/gj/lab1231-ecg-prj/ws/octave/result-exp/';
+            folder_name = '/home/gj/lab1231-ecg-prj/dataset/graf-exp/2D/first3min/128/none/';
             
-            f_name = [ folder_name 'G-' char(rec_name(k)) '-' num2str(sample_num) ...
+            f_name = [ folder_name char(rec_name(k)) '-' num2str(sample_num) ...
                       group_fname order_fname res_fname '-prd.txt'];
             save(f_name,'prd_arr','-ascii','-tabs');
             

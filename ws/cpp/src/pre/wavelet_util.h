@@ -18,6 +18,7 @@
 
 //gsl lib
 #include <gsl/gsl_wavelet.h>
+//#include </usr/local/include/gsl/gsl_wavelet.h>
 
 //macros for real and imaginary part extract
 #define REAL(z,i) ((z)[2*(i)])
