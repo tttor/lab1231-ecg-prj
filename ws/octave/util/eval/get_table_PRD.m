@@ -49,7 +49,7 @@ function [ all_prd_table ] = get_table_PRD
          %   fprintf('%s\n',cell2mat(rec_name(proc_list(j))));
             ecg  = load_ori_signal(cell2mat(rec_name(proc_list(j))));
             recg = load_rec_signal(cell2mat(rec_name(proc_list(j))),sample_num,CR(k),repeat,group,order,res);
-            res_prd_all = res_prd_all + prd_all(ecg, recg, 1);
+            res_prd_all = res_prd_all + prd_all(recg, ecg, 1);
             
            
             

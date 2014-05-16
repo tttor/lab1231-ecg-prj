@@ -105,8 +105,8 @@ char multichannel_normalization(double *input_signal,int sample_len,int *input_r
 		
 		printf("signal olah %d\n", signal_olah.size());
 		
-		char resx =  ECGNORM::norm_lead(sample_len,signal_olah,input_rpeak,input_rr,beat_found, norm_single);
-	
+		char resx =  ECGNormalizer::norm_lead(beat_found,signal_olah,input_rpeak,input_rr, norm_single);
+  
         for(k=0;k<norm_single.size();k++)
 		{
 			vmulti.push_back(norm_single[k]);
@@ -134,7 +134,7 @@ char multichannel_normalization(double *input_signal,int sample_len,int *input_r
 
 
 
-char ECGSignalPreprocessor::preprocess(char *fname,int sample_len, double *data_voltage, int adc_sampling_rate, vector<double> & data_out, char verbose_mode) {
+char ECGSignalPreprocessor::preprocess(char *fname,int sample_len, double *data_voltage, int adc_sampling_rate, vector<double> & data_out, vector<int>& rpeak_out, vector<int>& rr_out, char verbose_mode) {
   using namespace std;
   char resy = 0;
   cout << "Preprocessing: BEGIN\n";
@@ -145,48 +145,48 @@ char ECGSignalPreprocessor::preprocess(char *fname,int sample_len, double *data_
   
   int i,j,k;
   
-  /*
-	 * ARRANGE VOLTAGE DATA WITH ORDER CH1-CH8 
-	 * sample_number_tested EACH
-	 * */
-	adc_rearrange_voltage(sample_len, data_voltage);
+  ///*
+	 //* ARRANGE VOLTAGE DATA WITH ORDER CH1-CH8 
+	 //* sample_number_tested EACH
+	 //* */
+	//adc_rearrange_voltage(sample_len, data_voltage);
 		
-	/*
-	 * COPY IT TO data_clean
-	 * */
-	//memcpy(data_clean, data_voltage, (sample_len<<3) * sizeof(double));
+	///*
+	 //* COPY IT TO data_clean
+	 //* */
+	////memcpy(data_clean, data_voltage, (sample_len<<3) * sizeof(double));
 		
-	/*
-	 * WRITE data_voltage ARRANGED TO FILE
-	 * */
-	ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".data_arrange.csv",sample_len,  data_voltage, verbose_mode);
+	///*
+	 //* WRITE data_voltage ARRANGED TO FILE
+	 //* */
+	//ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".data_arrange.csv",sample_len,  data_voltage, verbose_mode);
 	
-	for(k=0;k<sample_len*8;k++)	//loop per sample len
-		{	
-			temp_data_clean[k]=data_voltage[k];				
-		}	
+	//for(k=0;k<sample_len*8;k++)	//loop per sample len
+		//{	
+			//temp_data_clean[k]=data_voltage[k];				
+		//}	
 			
-	/*
-	 * WRITE data_voltage ARRANGED TO FILE
-	 * */
-	//ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".data_temp",wave_len,  temp_data_clean, verbose_mode);
-	/*
-	 * CLEANUP ALL CHANNEL
-	 * OUTPUT OVERRIDE INPUT
-	 * */
+	///*
+	 //* WRITE data_voltage ARRANGED TO FILE
+	 //* */
+	////ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".data_temp",wave_len,  temp_data_clean, verbose_mode);
+	///*
+	 //* CLEANUP ALL CHANNEL
+	 //* OUTPUT OVERRIDE INPUT
+	 //* */
 	 
-	adc_multichannel_denoising(wave_len, temp_data_clean, adc_sampling_rate) ;
+	//adc_multichannel_denoising(wave_len, temp_data_clean, adc_sampling_rate) ;
 	
-	for(k=0;k<sample_len*8;k++)	//loop per sample len
-		{	
-			data_clean[k]=temp_data_clean[k];
+	//for(k=0;k<sample_len*8;k++)	//loop per sample len
+		//{	
+			//data_clean[k]=temp_data_clean[k];
 					
-		}	
+		//}	
 			
-	/*
-	 * WRITE CLEAN DATA TO FILE
-	 * */
-	ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".clean.csv",sample_len,  data_clean, verbose_mode);
+	///*
+	 //* WRITE CLEAN DATA TO FILE
+	 //* */
+	//ECGFileUtil::write_multichannel_arranged_data_to_file(fname,".clean.csv",sample_len,  data_clean, verbose_mode);
 	
     /*
 	 * RR DETECTION
@@ -219,17 +219,35 @@ char ECGSignalPreprocessor::preprocess(char *fname,int sample_len, double *data_
 			}
 	
 	}
-	//for(i=0;i<r_out[0]/2;i++){
-		//printf("%d %d \n",rpeak[i],rr[i]);
-		
-		//}
-	
 	beat_found=r_out[0]/2;
 	
-	
+  //Set rr interval to support last beat
+  int rpeak_new[beat_found+2];  
+  int rr_new[beat_found+1];
+  
+  for(i=0;i<beat_found;i++){
+    rpeak_new[i]=rpeak[i];
+    rr_new[i]=rr[i];
+  }
+     
+  rpeak_new[beat_found]=rpeak_new[beat_found-1]+rr_new[beat_found-1];
+  rpeak_new[beat_found+1]=sample_len;
+  rr_new[beat_found]=sample_len-rpeak_new[beat_found];
+  
+  for(i=0;i<beat_found+2-1;i++){
+    rpeak_out.push_back(rpeak_new[i]);
+    rr_out.push_back(rr_new[i]);
+  }
+  //for(i=0;i<beat_found+2-1;i++){
+    //rpeak_out.push_back(rpeak_new[i]);
+  //}   
+  
+  
    // vector< double > data_norm_multi;
-    
-    multichannel_normalization(data_clean,sample_len,rpeak,rr,beat_found,data_out);
+   //OVERWRITE CLEAN DARI MATLAB
+  resx = ECGFileUtil::read_csv_file(fname, data_clean, sample_len, 1, verbose_mode);
+  adc_rearrange_voltage(sample_len, data_clean);
+  multichannel_normalization(data_clean,sample_len,rpeak_new,rr_new,beat_found,data_out);
    
 	
 	cout << "Preprocessing: END\n";

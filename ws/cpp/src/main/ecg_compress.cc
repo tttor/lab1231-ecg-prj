@@ -125,13 +125,19 @@ int main(int argc, char **argv) {
 	ECGFileUtil::write_double_multichannel_to_file(fname,".data.csv", sample_number_tested,  data_voltage, verbose_mode);
 
 	vector< double > data_norm_multi;
-	resx = ECGSignalPreprocessor::preprocess(fname,sample_number_tested, data_voltage, sample_rate_data_input, data_norm_multi, verbose_mode);
+  vector< int > rpeak;
+  vector< int > rr;
+  
+	resx = ECGSignalPreprocessor::preprocess(fname,sample_number_tested, data_voltage, sample_rate_data_input, data_norm_multi, rpeak, rr, verbose_mode);
 	
 	printf("data_norm multi %d \n",data_norm_multi.size());
 	ECGFileUtil::write_multichannel_arranged_data_to_file_vector(fname,".normalize.csv",data_norm_multi.size()/8,  data_norm_multi, verbose_mode);
 	
-	//ECGARRAYCONST::set_array_to_matrix(data_norm_multi,sample_number_tested,verbose_mode);
-	
+  vector<double> print_frame_all;
+  
+	ECGArrayContructor::set_array_to_matrix(sample_num_per_frame, rpeak.size(), data_norm_multi, print_frame_all, verbose_mode);
+	ECGFileUtil::write_multichannel_arranged_data_to_file_vector_frame(fname,".frame.csv",pow(sample_num_per_frame,2),  print_frame_all, verbose_mode);
+  
 	cout << "Compression: END\n";
   
   return 0;

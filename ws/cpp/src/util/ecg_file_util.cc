@@ -1,20 +1,7 @@
 #include "ecg_file_util.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-#include <iostream>
-#include <cstring>
-  
+ 
 using namespace lab1231_ecg_prj;
-using namespace std;
 
 char ECGFileUtil::read_RR_file(char *filename, int *arr_out, char verbose) {
 	using namespace std;
@@ -85,11 +72,6 @@ char ECGFileUtil::read_RR_file(char *filename, int *arr_out, char verbose) {
   
 	
 }
-
-
-
-
-
 
 
 char ECGFileUtil::read_csv_file(char *filename, double *arr_out, int max_line, double scale_data, char verbose) {
@@ -266,7 +248,7 @@ char ECGFileUtil::write_multichannel_arranged_data_to_file(char *filename, char 
 /*
  * save multichannel arrange data to files
  * */
-char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, vector<double> & data_in, char verbose)
+char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose)
 {
 	char resx = 0;
 	FILE *fp;
@@ -307,5 +289,47 @@ char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename
 	return resx;
 }
   
-  
+/*
+ * save multichannel arrange data to files
+ * */
+char ECGFileUtil::write_multichannel_arranged_data_to_file_vector_frame(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose)
+{
+	char resx = 0;
+	FILE *fp;
+	char fnx[100];	//max 100 char
+
+	//build the filename
+	char *root = "../../../../dataset/cpp-exp/";
+		
+	strcpy(fnx, root);
+	strcat(fnx, filename);
+	strcat(fnx, ext);
+
+	printf("\nsave to %s\n", fnx);
+
+	fp = fopen(fnx,"w+");
+	if(fp)
+		{
+			//write it
+			int i,j,k;
+			//fprintf(fp, "CH1,CH2,CH3,CH4,CH5,CH6,CH7,CH8\n" );
+			for(i=0;i<sample_len;i++)	//loop per sample len
+			{
+				//~ for(j=(i*sample_len);j<((i+1)*sample_len);j++)	//loop
+				for(j=0;j<18;j++)
+					fprintf(fp, "%.15g%s", data_in[(j*sample_len)+i], (j==17) ? "\n":"," );
+			}
+
+			fclose(fp);
+		}
+	else
+		{
+			resx = 1;
+		}
+
+	if(verbose)
+		printf("save data to %s = %d\n", fnx, resx);
+
+	return resx;
+}  
   
