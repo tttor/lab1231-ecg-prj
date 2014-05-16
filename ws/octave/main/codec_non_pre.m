@@ -1,4 +1,4 @@
-function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, order, res, rep )
+function prd_out = codec_non_pre( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, order, res, rep )
 
 %tic;
     
@@ -44,12 +44,12 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     base = 0;
     gain = 306;
     
-    % Select lead I, II, V1..V6 as input signal
-    ecg8 = select_lead(ecg_in);
+    ecg8_pre_temp = csvread('ecg8_pre_matlab.csv');
+    ecg8_pre = ecg8_pre_temp';
     
-    % Physical unit conversion, BWR, LPF
-    [ecg8_pre,rr_ann,baseline] = preprocess(ecg8,RR_ANN_IN,base,gain);
-   
+    rr_ann = csvread('rr_ann_matlab.csv');
+    
+    fprintf('\nREAD CSV FILE =========================================\n');
     
     % ====================================================================
     % COMPRESSION STAGE
@@ -58,7 +58,11 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     fprintf('\nCOMPRESSION ===========================================\n');
 
     % Beat normalization
-    ecg8_scl = scale_beat_all(ecg8_pre,rr_ann,sample_num);
+    %ecg8_scl = scale_beat_all(ecg8_pre,rr_ann,sample_num);
+    ecg8_scl_temp = csvread('I01m.normalize.csv');
+    ecg8_scl = ecg8_scl_temp';
+ 
+    fprintf('\nREAD CSV FILE =========================================\n');
     
     
     % Multi lead to single lead ECG conversion
@@ -66,7 +70,12 @@ function prd_out = codec ( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, group, o
     
     
     % Single lead ECG segmentation into frames
-    ecg1_frm = segment_beat(ecg1,beat_num);
+    %ecg1_frm = segment_beat(ecg1,beat_num);
+    
+    ecg1_frm_temp = csvread('I01m.frame.csv');
+    ecg1_frm = ecg1_frm_temp';
+    
+    fprintf('\nREAD CSV FILE =========================================\n');
     
     
     % ECG frames to 2D ECG matrix conversion

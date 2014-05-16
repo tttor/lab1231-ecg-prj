@@ -19,6 +19,9 @@ function [ ecg_out ] = scale_beat ( ecg_in, rr_ann_in, scaled )
             end_idx   = rr_ann_in(2,k) + padding;
             us_beat   = ecg_in(start_idx:end_idx);
             s_beat    = resample(us_beat,scaled + padding,size(us_beat,2),orde);
+            
+            %s_beat    = fftResample(us_beat,scaled + padding,size(us_beat,2));
+            
             ecg_out   = [ecg_out s_beat(1:scaled)];
         else
             start_idx = rr_ann_in(2,k) - rr_ann_in(1,k-1) - padding + 1;
@@ -28,6 +31,7 @@ function [ ecg_out ] = scale_beat ( ecg_in, rr_ann_in, scaled )
             end_idx   = rr_ann_in(2,k) + padding;
             us_beat   = ecg_in(start_idx:end_idx);
             s_beat    = resample(us_beat,scaled + 2*padding,size(us_beat,2),orde);
+            %s_beat    = fftResample(us_beat,scaled + 2*padding,size(us_beat,2));
             ecg_out   = [ecg_out s_beat(1,1 + padding:size(s_beat,2) - padding)];
         end
     end
@@ -36,12 +40,14 @@ function [ ecg_out ] = scale_beat ( ecg_in, rr_ann_in, scaled )
     end_idx = rr_ann_in(2,beat_num) + rr_ann_in(1,beat_num);
     us_beat = ecg_in(start_idx:end_idx);
     s_beat  = resample(us_beat,scaled,size(us_beat,2),orde);
-    ecg_out = [ecg_out s_beat];
+    %s_beat    = fftResample(us_beat,scaled,size(us_beat,2)); 
+   ecg_out = [ecg_out s_beat];
     
     % last beat
     start_idx = rr_ann_in(2,beat_num) + rr_ann_in(1,beat_num) + 1;
     us_beat = ecg_in(start_idx:end);
     s_beat  = resample(us_beat,scaled,size(us_beat,2),orde);
+    %s_beat    = fftResample(us_beat,scaled,size(us_beat,2));
     fprintf(' [OK]\n');
     ecg_out = [ecg_out s_beat];   
 end
