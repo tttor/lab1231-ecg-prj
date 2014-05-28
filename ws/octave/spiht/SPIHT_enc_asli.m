@@ -1,4 +1,4 @@
-function [bit_str, S, I_W] = SPIHT_enc(mat_in, wv_type, dec_lvl, max_bits)
+function [bit_str, S] = SPIHT_enc(mat_in, wv_type, dec_lvl, max_bits)
 
     [nRow, nCol] = size(mat_in);
     OrigSize = nRow * nCol;

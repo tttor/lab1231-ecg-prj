@@ -6,10 +6,18 @@ add_subdirectory (pre)
 add_subdirectory (util)
 add_subdirectory (array-const)
 add_subdirectory (norm)
+add_subdirectory (spiht)
+
+
+
 
 
 find_package( PkgConfig REQUIRED)
 pkg_check_modules( gsl REQUIRED gsl )
+
+
+find_package( PkgConfig REQUIRED)
+pkg_check_modules( fftw3 REQUIRED fftw3 )
 
 
 

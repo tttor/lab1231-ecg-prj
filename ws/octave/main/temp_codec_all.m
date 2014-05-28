@@ -1,4 +1,4 @@
-function codec_all_non_pre
+function temp_codec_all
 
 %setting path octave only
 %root_dataset_path = '~/lab1231-ecg-prj/dataset/';
@@ -45,53 +45,14 @@ tic;
             rr_vname  = [char(rec_name(k)) '_rr'];
             rr_ann_in = eval(rr_vname);    
             
-            prd_arr = [];
-            min_arr = [];
             for l = 1:size(CR,2);
-                min     = realmax;
-                min_idx = 1;
-                sigma = 0;
                 for m = 1:repeat
                     fprintf('\nRepeat : %i\n',m);
-                    prd1 = codec_non_pre(char(rec_name(k)),ecg_in,rr_ann_in,sample_num, CR(l),group,order,res,m);
-                    if prd1 < min
-                        min = prd1;
-                        min_idx = m;
-                    end
-                    sigma = sigma + prd1;
+                    temp_codec(char(rec_name(k)),ecg_in,rr_ann_in,sample_num, CR(l),group,order,res,m);
                 end
-                prd_mean = sigma/repeat;
-                %prd_arr = [prd_arr prd_mean];
-                prd_arr = [prd_arr min];
-                min_arr = [min_arr min_idx];
             end
             %prd_arr
-            prd_arr = [prd_arr; min_arr]
             
-            if group == 1
-                group_fname = '-group';
-            else
-                group_fname = '';
-            end
-            
-            if order == 1
-                order_fname = '-order';
-            else
-                order_fname = '';
-            end
-            
-            if res == 1
-                res_fname = '-res';
-            else
-                res_fname = '';
-            end
-            
-            %folder_name = 'C:\Users\asus\Documents\GitHub\lab1231-ecg-prj\ws\octave\result-exp\';
-            folder_name = '/home/gj/lab1231-ecg-prj/dataset/graf-exp/2D/first3min/128/none/';
-            
-            f_name = [ folder_name char(rec_name(k)) '-' num2str(sample_num) ...
-                      group_fname order_fname res_fname '-prd.txt'];
-            save(f_name,'prd_arr','-ascii','-tabs');
             
         %catch err
        %     rethrow(err);

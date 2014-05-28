@@ -3,9 +3,9 @@
 
 using namespace lab1231_ecg_prj;
 
-char ECGArrayContructor::set_array_to_matrix(int sample_num_per_frame,int beat_found, std::vector<double>& data_norm_in, std::vector<double>& print_frame_all_out, char verbose) {
-	using namespace std;
-	cout << "Array Const : BEGIN\n";
+char ECGArrayContructor::set_array_to_frame(int sample_num_per_frame,int beat_found, std::vector<double>& data_norm_in, std::vector< std::vector<double> >& frame_all_out, char verbose) {
+using namespace std;
+	cout << "Array to Frame : BEGIN\n";
 	
   int i,j,k,m,h;
 	int start,end;
@@ -15,10 +15,9 @@ char ECGArrayContructor::set_array_to_matrix(int sample_num_per_frame,int beat_f
 	vector<double> one_beat;
   vector<double> data_single_arrange;
   vector<double> one_frame;
-  vector< vector<double> > frame_all;
-  
+
   int frame_num = floor(data_norm_in.size()/pow(sample_num_per_frame,2));
-  printf("frame_num %d", frame_num);    
+  printf("frame_num %d \n", frame_num);    
    
   int start_beat_in;
   
@@ -44,7 +43,7 @@ char ECGArrayContructor::set_array_to_matrix(int sample_num_per_frame,int beat_f
     for(j=start;j<end;j++){
       one_frame.push_back(data_single_arrange[j]);
     }
-    frame_all.push_back(one_frame);
+    frame_all_out.push_back(one_frame);
     one_frame.clear();
   }
   
@@ -55,24 +54,42 @@ char ECGArrayContructor::set_array_to_matrix(int sample_num_per_frame,int beat_f
         one_frame.push_back(0.0);
       }  
   }
-  frame_all.push_back(one_frame);
+  frame_all_out.push_back(one_frame);
   one_frame.clear();
   
   
-  printf("frame all size %d", frame_all.size());
-  
-  
-  for(i=0;i<frame_all.size();i++){
-    for(j=0;j<pow(sample_num_per_frame,2);j++){
-      print_frame_all_out.push_back(frame_all[i][j]);
-    }
-    
-  }
-  frame_all.clear();
-	cout << "Array Const : END\n";
+  printf("frame all size %d \n", frame_all_out.size());
+
+	cout << "Array to Frame : END\n";
 	
 }
 
+char ECGArrayContructor::set_frame_to_matrix(int sample_num_per_frame, std::vector<double>& frame_in, std::vector< std::vector<double> >& matrix_out){
+  
+  using namespace std;
+  cout << "One Frame to Matrix : BEGIN\n";
+  
+  int i,j,k;
+  int start,end;
+  vector<double> temp_frame_in;
+  
+  //for(i=0;i<frame_in.size();i++){
+    //temp_frame_in.push_back(frame_in[i]);
+  //}
+  
+  for(i=0;i<sample_num_per_frame;i++){
+    start = (i)*sample_num_per_frame;
+    end = start + sample_num_per_frame;
+    for(j=start;j<end;j++){
+      temp_frame_in.push_back(frame_in[j]);
+    }
+    matrix_out.push_back(temp_frame_in);  
+    temp_frame_in.clear();  
+  }
+  
+  
+  cout << "One Frame to Matrix : END\n";
+}
 
 
 
