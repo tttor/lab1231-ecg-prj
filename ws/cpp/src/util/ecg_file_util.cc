@@ -248,7 +248,7 @@ char ECGFileUtil::write_multichannel_arranged_data_to_file(char *filename, char 
 /*
  * save multichannel arrange data to files
  * */
-char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose)
+char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, int coloumn, std::vector<double> & data_in, char verbose)
 {
 	char resx = 0;
 	FILE *fp;
@@ -272,8 +272,8 @@ char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename
 			for(i=0;i<sample_len;i++)	//loop per sample len
 			{
 				//~ for(j=(i*sample_len);j<((i+1)*sample_len);j++)	//loop
-				for(j=0;j<8;j++)
-					fprintf(fp, "%.15g%s", data_in[(j*sample_len)+i], (j==7) ? "\n":"," );
+				for(j=0;j<coloumn;j++)
+					fprintf(fp, "%.15g%s", data_in[(j*sample_len)+i], (j==coloumn-1) ? "\n":"," );
 			}
 
 			fclose(fp);
@@ -289,47 +289,5 @@ char ECGFileUtil::write_multichannel_arranged_data_to_file_vector(char *filename
 	return resx;
 }
   
-/*
- * save multichannel arrange data to files
- * */
-char ECGFileUtil::write_multichannel_arranged_data_to_file_vector_frame(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose)
-{
-	char resx = 0;
-	FILE *fp;
-	char fnx[100];	//max 100 char
 
-	//build the filename
-	char *root = "../../../../dataset/cpp-exp/";
-		
-	strcpy(fnx, root);
-	strcat(fnx, filename);
-	strcat(fnx, ext);
-
-	printf("\nsave to %s\n", fnx);
-
-	fp = fopen(fnx,"w+");
-	if(fp)
-		{
-			//write it
-			int i,j,k;
-			//fprintf(fp, "CH1,CH2,CH3,CH4,CH5,CH6,CH7,CH8\n" );
-			for(i=0;i<sample_len;i++)	//loop per sample len
-			{
-				//~ for(j=(i*sample_len);j<((i+1)*sample_len);j++)	//loop
-				for(j=0;j<18;j++)
-					fprintf(fp, "%.15g%s", data_in[(j*sample_len)+i], (j==17) ? "\n":"," );
-			}
-
-			fclose(fp);
-		}
-	else
-		{
-			resx = 1;
-		}
-
-	if(verbose)
-		printf("save data to %s = %d\n", fnx, resx);
-
-	return resx;
-}  
   

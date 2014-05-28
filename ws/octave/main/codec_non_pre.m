@@ -70,10 +70,10 @@ function prd_out = codec_non_pre( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, g
     
     
     % Single lead ECG segmentation into frames
-    %ecg1_frm = segment_beat(ecg1,beat_num);
+    ecg1_frm = segment_beat(ecg1,beat_num);
     
-    ecg1_frm_temp = csvread('I01m.frame.csv');
-    ecg1_frm = ecg1_frm_temp';
+    %ecg1_frm_temp = csvread('I01m.frame.csv');
+    %ecg1_frm = ecg1_frm_temp';
     
     fprintf('\nREAD CSV FILE =========================================\n');
     
@@ -156,7 +156,7 @@ function prd_out = codec_non_pre( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, g
     end
     fprintf(' [OK]\n');
     
-
+%%{
     % Save variables with all caps name for decompression stage:
     
     % ====================================================================
@@ -308,7 +308,7 @@ function prd_out = codec_non_pre( rec_name, ecg_in, RR_ANN_IN, sample_num, CR, g
     f_name = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
               '.' num2str(rep) group_fname order_fname res_fname '-out.mat'];
     save(f_name,'recg8_pre');
-    
+%%}   
     
     %f_name_all = [folder_name rec_name '-' num2str(sample_num) '-' num2str(CR) ...
      %         '.' num2str(rep) group_fname order_fname res_fname '-all.mat'];

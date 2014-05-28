@@ -3,7 +3,7 @@ function prd_out = comp_signal( rec_name, lead_num, sample_num, CR, repeat_idx, 
 % plot the residual signal
     
     show_plot = 1;
-    split_fig = 0; 
+    split_fig = 1; 
     
     ymin = -1;
     ymax = 4;

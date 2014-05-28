@@ -44,7 +44,7 @@ while ((2*i-1)<s & (2*j-1)<s)
 end
 
 if type == 1
-    S(:,1:4) = [];; 
+    S(:,1:4) = [];;
 end
 
 value = max(abs(S));

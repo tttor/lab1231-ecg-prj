@@ -245,9 +245,9 @@ char ECGSignalPreprocessor::preprocess(char *fname,int sample_len, double *data_
   
    // vector< double > data_norm_multi;
    //OVERWRITE CLEAN DARI MATLAB
-  resx = ECGFileUtil::read_csv_file(fname, data_clean, sample_len, 1, verbose_mode);
-  adc_rearrange_voltage(sample_len, data_clean);
-  multichannel_normalization(data_clean,sample_len,rpeak_new,rr_new,beat_found,data_out);
+  //resx = ECGFileUtil::read_csv_file(fname, data_clean, sample_len, 1, verbose_mode);
+  //adc_rearrange_voltage(sample_len, data_clean);
+  //multichannel_normalization(data_clean,sample_len,rpeak_new,rr_new,beat_found,data_out);
    
 	
 	cout << "Preprocessing: END\n";

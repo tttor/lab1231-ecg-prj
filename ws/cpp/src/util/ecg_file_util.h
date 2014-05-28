@@ -17,8 +17,8 @@ class ECGFileUtil {
   static char read_csv_file(char *filename, double *arr_out, int max_line, double scale_data, char verbose);
   static char write_double_multichannel_to_file(char *filename, char *ext, int data_len, double *data_in, char verbose);
   static char write_multichannel_arranged_data_to_file(char *filename, char *ext, int sample_len, double *data_in, char verbose);
-  static char write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose);
-  static char write_multichannel_arranged_data_to_file_vector_frame(char *filename, char *ext, int sample_len, std::vector<double> & data_in, char verbose);
+  static char write_multichannel_arranged_data_to_file_vector(char *filename, char *ext, int sample_len, int coloumn, std::vector<double> & data_in, char verbose);
+  
  private:
  
 };
