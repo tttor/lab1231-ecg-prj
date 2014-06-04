@@ -5,6 +5,7 @@
 # Some preprocessing steps follow (Batuwitage, phdthesis), namely: the dataset (p92), the proprocessing, the hyperparam tuning, the eval metric
 
 import numpy as np
+import os
 from sklearn import svm
 from sklearn.metrics import confusion_matrix
 from sklearn import cross_validation as cv
@@ -14,12 +15,12 @@ from sklearn import preprocessing
 import util 
 
 def preprocess(raw_X):
+    # Scaled data has zero mean and unit variance:
+    X = preprocessing.scale(raw_X)
+
     # Scaled into [-1,+1] interval. (Batuwitage, phdthesis, p92), BUT results in worse gmean than using preprocessing.scale()
     min_max_scaler = preprocessing.MinMaxScaler(feature_range=(-1.0, 1.0))
-    X = min_max_scaler.fit_transform(raw_X)
-
-#    # Scaled data has zero mean and unit variance:
-#    X = preprocessing.scale(raw_X)
+    X = min_max_scaler.fit_transform(X)
     
     return X
 
@@ -69,6 +70,34 @@ def tune_train_test(X, y):
         outer_iter_idx = outer_iter_idx + 1    
         
     return (np.mean(gmeans, axis=0), np.std(gmeans, axis=0))
+
+def dummy_tune_train_test(X, y, db_name):
+    # Utilize the so-called outer-inner-cv (Batuwitage, p55)
+    outer_kfold = 5
+    inner_kfold = 5
+
+    outer_iter_idx = 0
+    skf = cv.StratifiedKFold(y, n_folds=outer_kfold)# contains n_folds clones datasets, each contain te_ and tr_ data with the ratio of 1:(n_folds-1)
+    for tr_idx, te_idx in skf:# the outer loop: StratifiedKFold
+        print 'Outer loop iter-th=', outer_iter_idx+1, '--------------------'
+        X_tr, X_te = X[tr_idx], X[te_idx]
+        y_tr, y_te = y[tr_idx], y[te_idx]
+        
+        dir_path = 'out/cv-data-double-preprocessing/' + db_name + "/clone-" + str(outer_iter_idx+1) + "/"
+        
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        
+        np.savetxt(dir_path + "X_tr.csv", X_tr, delimiter=",")
+        np.savetxt(dir_path + "X_te.csv", X_te, delimiter=",")
+        np.savetxt(dir_path + "y_tr.csv", y_tr, delimiter=",")
+        np.savetxt(dir_path + "y_te.csv", y_te, delimiter=",")
+        
+        outer_iter_idx = outer_iter_idx + 1
+
+def dummy_run(raw_X, y, db_name):
+    X = preprocess(raw_X)
+    dummy_tune_train_test(raw_X, y, db_name)
 
 def run(raw_X, y):
     X = preprocess(raw_X)

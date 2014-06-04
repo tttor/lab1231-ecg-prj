@@ -27,7 +27,7 @@ def load_glass():
 
 def load_pima_indians_diabetes():
     # Load the dataset: pima-indians
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/pima-indians-diabetes/pima-indians-diabetes.data'
+    db_path = uci_db_dir_path + 'pima-indians-diabetes/pima-indians-diabetes.data'
     n_sample_per_class = {'positive_class': 268, 'negative_class': 500}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)
@@ -49,7 +49,7 @@ def load_pima_indians_diabetes():
 
 def load_haberman():
     # Load the dataset: haberman
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/haberman/haberman.data'
+    db_path = uci_db_dir_path + 'haberman/haberman.data'
     n_sample_per_class = {'positive_class': 81, 'negative_class': 225}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)
@@ -70,7 +70,7 @@ def load_haberman():
     return (X, y)
 
 def load_page_blocks():
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/page-blocks/page-blocks.data'
+    db_path = uci_db_dir_path + 'page-blocks/page-blocks.data'
     n_sample_per_class = {'positive_class': 115, 'negative_class': 5358}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)
@@ -91,7 +91,7 @@ def load_page_blocks():
     return (X, y)
 
 def load_abalone():
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/abalone/abalone.data'
+    db_path = uci_db_dir_path + 'abalone/abalone.data'
     n_sample_per_class = {'positive_class': 103, 'negative_class': 4074}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)
@@ -112,7 +112,7 @@ def load_abalone():
     return (X, y)
 
 def load_yeast():
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/yeast/yeast.data'
+    db_path = uci_db_dir_path + 'yeast/yeast.data'
     n_sample_per_class = {'positive_class': 51, 'negative_class': 1433}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)
@@ -141,7 +141,7 @@ def load_yeast():
     return (X, y)
 
 def load_transfusion():
-    db_path = '/home/tor/robotics/prj/010/ws/fsvm-cil/dataset/blood-transfusion/transfusion.data'
+    db_path = uci_db_dir_path + 'blood-transfusion/transfusion.data'
     n_sample_per_class = {'positive_class': 178, 'negative_class': 570}
     n_sample = sum([n_sample_per_class['positive_class'], n_sample_per_class['negative_class']])
     n_class = len(n_sample_per_class)

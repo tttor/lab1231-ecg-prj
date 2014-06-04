@@ -15,6 +15,7 @@ def get_gmean(cm):
     SE = float(TP)/(TP+FN)
     SP = float(TN)/(TN+FP)
     gmean = np.sqrt(SE*SP)
+    acc = (float(TP) + float(TN))/(TP+TN+FP+FN)
     
     return (gmean, SE, SP)
     
