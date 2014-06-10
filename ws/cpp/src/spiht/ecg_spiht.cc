@@ -1,518 +1,585 @@
 #include "ecg_spiht.h"
-#include <ecg_file_util.h>
 
 using namespace lab1231_ecg_prj;
 
-char ECGSpiht::get_spiht_enc(int max_bit_in, std::vector< std::vector<double> >& mat_1_in, std::vector<int>& bit_str_1_out ){
+std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const Eigen::MatrixXd& wavelet_img, const uint64_t& CR, const uint64_t& res, const uint64_t n_frame, std::string out_dir) {
   using namespace std;
-  cout << "wavelet decomposition \n";
+  using namespace boost;
+  using Eigen::MatrixXd;
+  using Eigen::RowVectorXd;
+  
+  cout << "run_spiht(): BEGIN" << endl;
+  
+  uint8_t n_lead = 8;
+  uint64_t n_sample = 46260;
+  
+  uint64_t max_bits;
+  max_bits = (n_sample*n_lead*res/CR) / n_frame;// Indeed: truncation!
+  //cout << "max_bits= "<< max_bits << endl;
+  
+  vector<RowVectorXd> bit_str_all_frames(n_frame);
+  
+  const uint8_t target_frame = 1;
+  
+  for (uint8_t i=0; i<target_frame; ++i) {
+    RowVectorXd bit_str;
+    const uint8_t level = 7;// TODO max it flexible!
+
+    bit_str = spiht_enc(wavelet_img, max_bits, level);
+    //cout << "bit_str=\n" << bit_str << endl;
+    cout << "bit_str.size()= " << bit_str.size() << endl;
     
-  int i,j,k;
-  int level = 1;
-  string wave_name = "bior4.4";
-  vector<double> flag;
-  vector<int> length;
+    bit_str_all_frames.at(i) = bit_str;
+  }
+  cout << "bit_str_all_frames.size()= " << bit_str_all_frames.size() << endl;
   
-  int rr1,cc1;
-  dwt_output_dim(mat_1_in, rr1, cc1 );
-  vector<vector<double> >  dwt_output(rr1, vector<double>(cc1));
-  printf("rr1 %d ==== cc1 %d\n", rr1,cc1);
+  // Save
+  for (uint8_t i=0; i<target_frame; ++i){
+    if (!out_dir.empty()) {
+      string bit_str_csv = string(out_dir + "bit_str.csv");
+      cout << "bit_str_csv= " << bit_str_csv << endl;
+      
+      RowVectorXd bit_str;
+      bit_str = bit_str_all_frames.at(i);
+      
+      MatrixXd bit_str_mat(1, bit_str.size());
+      bit_str_mat.row(0) = bit_str;
+      //cout << "bit_str_mat=\n" << bit_str_mat << endl;
+      
+      CSVIO::write(bit_str_mat, bit_str_csv);
+    }
+  }
   
-  //jalankan wavelet
-  dwt_2d(mat_1_in,level,wave_name,dwt_output,flag);
-  
-  printf("ukuran output %d\n", dwt_output.size());
-   
-  //hasilnnya panggil spiht
-  spiht_enc(max_bit_in,level,rr1*cc1,dwt_output,bit_str_1_out);
-  
+  cout << "run_spiht(): END" << endl;
+  return bit_str_all_frames;
 }
 
-char ECGSpiht::spiht_enc(int max_bit_in, int level, int rowcol, std::vector< std::vector<double> >& wave_mat_in, std::vector<int>& bit_str_out ){
+Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const uint64_t& max_bits, const uint64_t& level) {
+  using Eigen::MatrixXd;
+  using Eigen::VectorXd;
+  using Eigen::RowVectorXd;
   using namespace std;
-  using namespace arma;
-  
-  printf("spiht encoding\n");
-  //loop var
-  int i,j,k,l;
+  using namespace boost;
+
+  cout << "spiht_enc(): BEGIN" << endl;
+  Debugger::reset();
   
   //-------------------------initialization------------------------------
-  mat m;
-  m.set_size(wave_mat_in.size(),wave_mat_in.size());
-  int block_size = m.n_rows*m.n_cols;
-  int bitctr = 0;
+  cout << "initialization" << endl;
   
-  printf("%d\n", block_size);
-  for(i=0;i<wave_mat_in.size();i++){
-    for(j=0;j<wave_mat_in.size();j++){
-      m(i,j)=wave_mat_in[i][j];  
-    //  printf("%f,",m(i,j));
-    }
-    //printf("\n");
-  }
+  MatrixXd wavelet_img_tr;
+  wavelet_img_tr = wavelet_img.transpose();
   
-  Mat<int> out;
-  out.set_size(1,max_bit_in);
-  out.fill(2);
-  //cout << out << endl;
-  mat temp_m;
-  temp_m = trans(m);
-  int n_max = floor(log2(abs(max(max(temp_m)))));
-  //cout << n_max << endl;
-  int bits_header = 0;
-  int bits_LSP = 0;
-  int bits_LIP = 0;
-  int bits_LIS = 0;
+  double max_val;
+  max_val = wavelet_img.rowwise().maxCoeff().maxCoeff();
   
-  //----------------output bit stream header-------------------
-  //image size, number of bit plane, wavelet dec level shoud be written as bit stream header
-  out(0,0)=m.n_cols;
-  out(0,1)=n_max;
-  out(0,2)=level;
-  //cout << out.n_cols << endl;
-  //cout << out(0,0) << endl;
-  //cout << out(0,1) << endl;
-  //cout << out(0,2) << endl;
-  bitctr = bitctr + 24;
-  int index = 4;
-  bits_header = bits_header + 24;
+  uint16_t n_max;// threshold to determine whether a wavelet coeff is significant
+  n_max = floor( log2(abs(max_val)) );
+  //cout << "n_max= " << n_max << endl;
+  
+  RowVectorXd bit_str;
+  bit_str = MatrixXd::Ones(1, max_bits) * 2;// multiply by 2 for error detection, normal values are either 0 or 1
+  bit_str(0) = wavelet_img.cols();
+  bit_str(1) = n_max;
+  bit_str(2) = level;
+ 
+  uint16_t bit_str_idx = 3;// since the first 3 elements have been filled, see above
   
   //-----------initialize LIP, LSP, LIS-----------------------
-  Mat<int> temp;
-  int bandsize = pow(2,log2(m.n_rows)-level+1);
-  //cout << bandsize << endl;
-  Mat<int> temp1;
-  temp1.set_size(1,bandsize);
-  for(i=0;i<bandsize;i++){
-    temp1(0,i)=i+1;
+  cout << "initializise LIP" << endl;
+  
+  const uint16_t bandsize = pow( 2,log2(wavelet_img.rows())-level+1 );
+  
+  RowVectorXd raw_LIP_row(bandsize);
+  for (uint16_t i=0; i<bandsize; ++i) {
+    raw_LIP_row(i) = i;
   }
-  //cout << temp1 << endl;
-  temp.set_size(bandsize,bandsize);
-  for(i=0;i<bandsize;i++){
-    temp.row(i)=temp1;
+  
+  MatrixXd raw_LIP(bandsize, bandsize);
+  for(uint16_t i=0; i<bandsize; i++){
+    raw_LIP.row(i) = raw_LIP_row;
   }
-  //cout << temp << endl;
-  Mat<int> LIP;
-  LIP.set_size(bandsize*bandsize,2);
-  k=1;
-  for(i=1;i<=bandsize*bandsize;i++){
-    LIP(i-1,0)=k;
-    if(i%128==0){
-      k++;
+  
+  VectorXd col_major_vec_of_raw_LIP(bandsize*bandsize);
+  VectorXd row_major_vec_of_raw_LIP(bandsize*bandsize);
+  uint32_t idx = 0;
+  for (uint16_t i=0; i<bandsize; ++i) {
+    for (uint16_t j=0; j<bandsize; ++j) {
+      col_major_vec_of_raw_LIP(idx) = raw_LIP(j, i);
+      row_major_vec_of_raw_LIP(idx) = raw_LIP(i, j);
+      ++idx;
     }
-  }
-  k=1;
-  for(i=1;i<=bandsize*bandsize;i++){
-    LIP(i-1,1)=k;
-    if(i%128==0){
-      k=1;
-    }
-    else{k++;}  
-  }
-  //cout << LIP << endl;
-  Mat<int> LIS;
-  LIS.set_size(bandsize*bandsize,3);
-  LIS.col(0)=LIP.col(0);
-  LIS.col(1)=LIP.col(1);
-  Mat<int> A;
-  A.zeros(bandsize*bandsize,1);
-  LIS.col(2)=A.col(0);
-  A.clear();
-  //cout << LIS << endl;
-  int pstart = 0;
-  int pend = (bandsize/2)-1;
-  int pdel;
-  for(i=0;i<bandsize/2;i++){
-    LIS.shed_rows(pstart,pend);
-    pdel = pend - pstart + 1;
+  } 
+  //cout << col_major_vec_of_raw_LIP << endl << endl;
+  //cout << row_major_vec_of_raw_LIP << endl << endl;
+  
+  MatrixXd LIP(bandsize*bandsize, 2);// LIP = List of Insignificant Pixels
+  LIP.col(0) = col_major_vec_of_raw_LIP;
+  LIP.col(1) = row_major_vec_of_raw_LIP;
+  //cout << "LIP=\n" << LIP << endl << endl;
+  
+  cout << "initializise LIS" << endl;
+  
+  MatrixXd LIS(bandsize*bandsize, 3);// LIS = List of Insignificant Set
+  LIS.col(0) = LIP.col(0);
+  LIS.col(1) = LIP.col(1);
+  LIS.col(2) = MatrixXd::Zero(bandsize*bandsize,1);
+  //cout << "Before LIS=\n" << LIS << endl;
+  
+  uint8_t pstart = 0;
+  uint8_t pend = (bandsize/2)-1;// minus one because idx begins at 0
+  for(uint8_t i=0; i<bandsize/2; i++){
+    LIS = EigenLibSupport::remove_rows(LIS, pstart, pend);
+    
+    uint8_t pdel;
+    pdel = pend - pstart + 1;// plus one to make pdel points to the element just after the element pointed by pend, which was already deleted now
+    
     pstart = pstart + bandsize - pdel;
     pend = pend + bandsize - pdel;
   }
-  //cout << LIS.n_rows << endl;
-  Mat<int> LSP;
-  int n = n_max;
+  //cout << "After LIS=\n" << LIS << endl;
   
+  cout << "initializise LSP" << endl;
+  MatrixXd LSP;// LSP = List of Significant Pixels
+
   //---------------------------coding-----------------------------------
-  Mat<int> LIPtemp;
-  Mat<int> LIStemp;
-    
-  LSP.set_size(1,2);
-  int tempvar;
-  int sgn;
-  int max_d;
-  int x,y; 
-  int value;
-  int s;
+  cout << "coding ....\n";
   
+  uint64_t bitctr;// TODO is it bit counter?
+  bitctr = 24;// TODO why 24?
   
-  while(bitctr<max_bit_in){
-    //sorting pass
-    LIPtemp=LIP;
-    tempvar=1;
-    //cout << LIPtemp << endl;
-    printf("LIPtemp row %d",LIPtemp.n_rows);
-    for(i=0;i<LIPtemp.n_rows;i++){
-      tempvar++;
-      if(bitctr+1>=max_bit_in){
-        if(bitctr < max_bit_in){
-          out.shed_col(out.n_cols-1);  
-        }
-        break;  
-      }
-      //printf("mmamamamam %d\n",i);
-      //cout << LIPtemp(i,1-1) <<endl;
-      //cout << LIPtemp(i,2-1) <<endl;
-      //cout << m(LIPtemp(i,1-1),LIPtemp(i,2-1)) <<endl;
-      if(abs(m(LIPtemp(i,1-1)-1,LIPtemp(i,2-1)-1)) >= pow(2,n)){
-        out(0,index-1)=1;
-        bitctr++;
-        index++;
-        bits_LIP++;
-        sgn=m(LIPtemp(i,1-1),LIPtemp(i,2-1))>=0;
-        out(0,index-1)=sgn;
-        bitctr++;
-        index++;
-        bits_LIP++;
-        if(i>0){//resize
-          LSP.resize(LSP.n_rows+1,LSP.n_cols);  
-        }
-        LSP(i,0)=LIPtemp(i,0);
-        LSP(i,1)=LIPtemp(i,1);
-        LIP.shed_row(tempvar-1);
-        tempvar--;
-      }else{
-        out(0,index-1)=0;
-        bitctr++;
-        index++;
-        bits_LIP++;  
-      }
-    }
+  uint64_t bits_LSP = 0;
+  uint64_t bits_LIP = 0;
+  uint64_t bits_LIS = 0;
+  
+  int64_t n;// TODO what is n?
+  n = n_max;
+  
+  // TODO remove me!
+  uint64_t if_counter = 0;
+  uint64_t else_counter = 0;
+  
+  const uint64_t coding_while_iter_target = 2;
+  uint64_t outer_while_ctr = 0;
+  while (bitctr < max_bits) {/////////////// OUTER_WHILE //////////////////////////////////////////////
+    ++outer_while_ctr;
+    string here_outerwhile = string("outerwhile-" + lexical_cast<string>(outer_while_ctr) + "/");
+    cout << "outerwhile: iter= " << outer_while_ctr << ": BEGIN xxxxxxxxxxxxxxxxxxxxxxxx\n";
     
-    LIStemp=LIS;
-    tempvar=1;
-    i=0;
-    while(i<=LIStemp.n_rows){
-      tempvar++;
-      if(LIStemp(i,3-1)==0){
-        if(bitctr>=max_bit_in){
-          break;  
+    string here_outerwhile_event_1 = here_outerwhile + "event-1/";
+    
+    // Sorting pass
+    MatrixXd tmp_LIP = LIP;
+    int64_t LIP_idx = -1;// TODO what does LIP_IDX point for in LIP?; -1 to synch with the Matlab's implementation
+        
+    for (uint64_t i=0; i<tmp_LIP.rows(); ++i) {
+      //cout << "for (uint2(10)=\n" << bit_str.head(10) << endl;
+      
+      ++LIP_idx;
+      if ((bitctr + 1) >= max_bits) {
+        if (bitctr < max_bits) {
+          bit_str.conservativeResize( bit_str.size()-1 );
         }
-       // max_d =getDescendant(LIStemp(i,1-1),LIStemp(i,2-1),LIStemp(i,3-1,m));
-        if(max_d>=pow(2,n)){
-          out(index-1)=1;
-          bitctr++;
-          index++;
-          bits_LIS++;
-          x = LIStemp(i,1-1);
-          y = LIStemp(i,2-1);
-          if(bitctr+1 >= max_bit_in){
-            if(bitctr<max_bit_in){
-              out.shed_col(out.n_cols-1);    
-            }
-            break;  
-          }
-          //(2*x-1-1,2*y-1-1)
-          if(abs(m(2*x-1-1,2*y-1-1)) >= pow(2,n)){
-            //rentang salah
-            LSP.resize(LSP.n_rows+1,LSP.n_cols);  
-            LSP(LSP.n_rows-1,0)=2*x-1;
-            LSP(LSP.n_rows-1,1)=2*y-1;
-            out(index-1)=1;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            sgn=m(2*x-1-1,2*y-1-1)>=0;
-            out(index-1)=sgn;
-            index++;
-            bits_LIS++;
-          }
-          else{
-            out(index-1)=0;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            LIP.resize(LIP.n_rows+1,LIP.n_cols); 
-            LIP(LIP.n_rows-1,0)=2*x-1;
-            LIP(LIP.n_rows-1,1)=2*y-1;
-          }
-          if(bitctr+1 >=max_bit_in){
-            if(bitctr<max_bit_in){
-              out.shed_col(out.n_cols-1);      
-            }
-            break;
-          }
-          
-          //(2*x-1-1,2*y-1)
-           if(abs(m(2*x-1-1,2*y-1)) >= pow(2,n)){
-            //rentang salah
-            LSP.resize(LSP.n_rows+1,LSP.n_cols);  
-            LSP(LSP.n_rows-1,0)=2*x-1;
-            LSP(LSP.n_rows-1,1)=2*y;
-            out(index-1)=1;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            sgn=m(2*x-1-1,2*y-1)>=0;
-            out(index-1)=sgn;
-            index++;
-            bits_LIS++;
-          }
-          else{
-            out(index-1)=0;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            LIP.resize(LIP.n_rows+1,LIP.n_cols); 
-            LIP(LIP.n_rows-1,0)=2*x-1;
-            LIP(LIP.n_rows-1,1)=2*y;
-          }
-          if(bitctr+1 >=max_bit_in){
-            if(bitctr<max_bit_in){
-              out.shed_col(out.n_cols-1);      
-            }
-            break;
-          }
-          
-          //(2*x-1,2*y-1-1)
-          if(abs(m(2*x-1,2*y-1-1)) >= pow(2,n)){
-            //rentang salah LSPNYA indexnya
-            LSP.resize(LSP.n_rows+1,LSP.n_cols);  
-            LSP(LSP.n_rows-1,0)=2*x;
-            LSP(LSP.n_rows-1,1)=2*y-1;
-            out(index-1)=1;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            sgn=m(2*x-1,2*y-1-1)>=0;
-            out(index-1)=sgn;
-            index++;
-            bits_LIS++;
-          }
-          else{
-            out(index-1)=0;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            LIP.resize(LIP.n_rows+1,LIP.n_cols); 
-            LIP(LIP.n_rows-1,0)=2*x;
-            LIP(LIP.n_rows-1,1)=2*y-1;
-          }
-          if(bitctr+1 >=max_bit_in){
-            if(bitctr<max_bit_in){
-              out.shed_col(out.n_cols-1);      
-            }
-            break;
-          }
-          
-          //(2*x-1,2*y-1)
-          if(abs(m(2*x-1,2*y-1)) >= pow(2,n)){
-            //rentang salah
-            LSP.resize(LSP.n_rows+1,LSP.n_cols);  
-            LSP(LSP.n_rows-1,0)=2*x;
-            LSP(LSP.n_rows-1,1)=2*y;
-            out(index-1)=1;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            sgn=m(2*x-1,2*y-1)>=0;
-            out(index-1)=sgn;
-            index++;
-            bits_LIS++;
-          }
-          else{
-            out(index-1)=0;
-            bitctr++;
-            index++;
-            bits_LIS++;
-            LIP.resize(LIP.n_rows+1,LIP.n_cols); 
-            LIP(LIP.n_rows-1,0)=2*x;
-            LIP(LIP.n_rows-1,1)=2*y;
-          }
-          
-          if((2*(2*x)-1)<m.n_rows && (2*(2*y)-1)<m.n_rows){
-            LIS.resize(LIS.n_rows+1,LIS.n_cols); 
-            LIS(LIS.n_rows-1,0)=LIStemp(i,1-1);
-            LIS(LIS.n_rows-1,1)=LIStemp(i,2-1);
-            LIS(LIS.n_rows-1,2)=1;
-            LIStemp.resize(LIStemp.n_rows+1,LIStemp.n_cols); 
-            LIStemp(LIStemp.n_rows-1,0)=LIStemp(i,1-1);
-            LIStemp(LIStemp.n_rows-1,1)=LIStemp(i,2-1);
-            LIStemp(LIStemp.n_rows-1,2)=1;
-              
-          }
-          LIS.shed_row(tempvar-1);
-          tempvar--;
+        return bit_str;
+      }
+      
+      double wavelet_img_character;
+      wavelet_img_character = abs(wavelet_img(tmp_LIP(i,0),tmp_LIP(i,1)));
+      //cout << "wavelet_img_character= " << wavelet_img_character << endl;
+      
+      if ( wavelet_img_character >= pow(2, n) ) {
+        //cout << "if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
+        
+        spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr, &bits_LIP);
+        
+        if (  wavelet_img(tmp_LIP(i,0),tmp_LIP(i,1))  >= 0  ) {
+          bit_str(bit_str_idx) = 1;
         }
-        else{
-          out(index-1)=0;
-          bitctr++;
-          index++;
-          bits_LIS++;  
-          
+        else {
+          bit_str(bit_str_idx) = 0;
         }
         
+        ++bitctr;
+        ++bit_str_idx;
+        ++bits_LIP;
+        
+        if (LSP.size()==0) {
+          LSP = tmp_LIP.row(i);
+        }
+        else {
+          LSP.conservativeResize( LSP.rows()+1, LSP.cols() );
+          LSP.row(LSP.rows()-1) = tmp_LIP.row(i);
+        }
+        LIP = EigenLibSupport::remove_row(LIP, LIP_idx);
+        --LIP_idx;
       }
-      else{ //if(LIStemp(i,3)==0)
-        if(bitctr>=max_bit_in){
-          break;
-        }
-       // max_d = getDescendant(LIStemp(i,1-1),LIStemp(i,2-1),LIStemp(i,3-1),m);
-        if(max_d >=pow(2,n)){
-          out(index-1)=1;
-          bitctr++;
-          x = LIStemp(i,1-1);
-          y = LIStemp(i,2-1);
-          LIS.resize(LIS.n_rows+1,LIS.n_cols); 
-          LIS(LIS.n_rows-1,0)=2*x-1;
-          LIS(LIS.n_rows-1,1)=2*y-1;
-          LIS(LIS.n_rows-1,2)=0;
-          LIS.resize(LIS.n_rows+1,LIS.n_cols); 
-          LIS(LIS.n_rows-1,0)=2*x-1;
-          LIS(LIS.n_rows-1,1)=2*y;
-          LIS(LIS.n_rows-1,2)=0;
-          LIS.resize(LIS.n_rows+1,LIS.n_cols); 
-          LIS(LIS.n_rows-1,0)=2*x;
-          LIS(LIS.n_rows-1,1)=2*y-1;
-          LIS(LIS.n_rows-1,2)=0;
-          LIS.resize(LIS.n_rows+1,LIS.n_cols); 
-          LIS(LIS.n_rows-1,0)=2*x;
-          LIS(LIS.n_rows-1,1)=2*y;
-          LIS(LIS.n_rows-1,2)=0;
-          LIS.shed_row(tempvar-1);
-          tempvar--;
-        }
-        else{
-          out(index-1)=0;
-          bitctr++;
-          index++;
-          bits_LIS++;
-        }
+      else {
+        //cout << "else {} of if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
+        
+        spiht_enc_helper_4(0, &bit_str, &bit_str_idx, &bitctr, &bits_LIP);
+      }
       
+      //cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": END\n";
+    }// for (uint64_t i=0; i<tmp_LIP.rows(); ++i)
+    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIP", tmp_LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_1), "ERROR: Unmatched param");
+    
+    MatrixXd tmp_LIS = LIS;
+    int64_t LIS_idx = -1;// TODO this looks silly (as the matlab implementation), fix it! 
+    uint64_t i = 0;// iterator variable for the innerwhile1: while (i < tmp_LIS.rows())
+    
+    uint64_t inner_while_1_ctr = 0;  
+    while (i < tmp_LIS.rows()) {/////// INNER_WHILE_1 ////////////////////////////////////////////////
+      ++inner_while_1_ctr;
+      string here_innerwhile1 = string(here_outerwhile + "innerwhile1-" + lexical_cast<string>(inner_while_1_ctr) + "/");
       
-      }
+      cout << "-------------------------------------------------------\n";
+      cout << "innerwhile1: iter= " << inner_while_1_ctr << ": BEGIN" << endl;
+      
+      string here_innerwhile1_event_1 = here_innerwhile1 + "event-1/";
+      
+      LIS_idx = LIS_idx + 1;
+      
+      if (tmp_LIS(i,2)==0) {
+        //cout << "if (tmp_LIS(i,2)==0): BEGIN\n";
+        
+        if (bitctr >= max_bits) {
+          return bit_str;
+        }
+        
+        double max_d;
+        //max_d = get_descendant(tmp_LIS.row(i), wavelet_img);// TODO 
+        max_d = get_descendant(1, if_counter);
+        ++if_counter;
+        
+        if (max_d >= pow(2,n)) {
+          //cout << "if (max_d >= pow(2,n)): BEGIN\n";
+          
+          spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr, &bits_LIS);
+          
+          // Go through 4 possible cases
+          // TODO make use of get_pq()
+          uint8_t p, q;// used to access the wavelet_img matrix in 4 possible cases below
+          
+          uint8_t x, y;
+          x = tmp_LIS(i, 0);
+          y = tmp_LIS(i, 1);
+          
+          for (uint8_t c=1; c<5; ++c) {// c for case iterator, $c \in {1, 2, 3, 4}$
+            bool helper_2_flag;          
+            helper_2_flag = spiht_enc_helper_2(bitctr, max_bits, &bit_str);
+            if (helper_2_flag == true) {
+              return bit_str;
+            }
+          
+            uint8_t p, q;
+            get_pq(c, x, y, &p, &q);
+            
+            spiht_enc_helper(wavelet_img, p, q, n, &LSP, &LIP, &bit_str, &bit_str_idx, &bitctr, &bits_LIS);
+          }
+          
+          // Appendix step, TODO rationale?
+          cout << "Appendix step: BEGIN:\n";
+          
+          p = (2 * (2*x) - 1) + 3;// plus 3 for idx correction
+          q = (2 * (2*y) - 1) + 3;
+          //cout << "p = " << (int)p << endl;
+          //cout << "q = " << (int)q << endl;
+          //cout << "wavelet_img.rows() = " << wavelet_img.rows() << endl;
+          
+          if ( (p<wavelet_img.rows()) and (q<wavelet_img.rows()) ) { // Assume: wavelet_img.cols() == wavelet_img.rows()
+            LIS.conservativeResize( LIS.rows()+1, LIS.cols() );
+            LIS(LIS.rows()-1, 0) = tmp_LIS(i, 0);
+            LIS(LIS.rows()-1, 1) = tmp_LIS(i, 1);
+            LIS(LIS.rows()-1, 2) = 1;// The 3th column of LIS contains the type of descendant used in get_descendant()
+            
+            tmp_LIS.conservativeResize( tmp_LIS.rows()+1, tmp_LIS.cols() );
+            tmp_LIS(tmp_LIS.rows()-1, 0) = tmp_LIS(i, 0);
+            tmp_LIS(tmp_LIS.rows()-1, 1) = tmp_LIS(i, 1);
+            tmp_LIS(tmp_LIS.rows()-1, 2) = 1;
+          }
+          LIS = EigenLibSupport::remove_row(LIS, LIS_idx);
+          LIS_idx = LIS_idx - 1;
+          
+          //cout << "if (max_d >= pow(2,n)): END\n";
+        }// if (max_d >= pow(2,n))
+        else {
+          spiht_enc_helper_4(0, &bit_str, &bit_str_idx, &bitctr, &bits_LIS);
+        } 
+        
+        //cout << "if (tmp_LIS(i,2)==0): END\n";
+      }// if (tmp_LIS(i,2)==0) 
+      else {
+        //cout << "else {} of if (tmp_LIS(i,2)==0): BEGIN\n";
+        
+        if (bitctr >= max_bits) {
+          return bit_str;
+        }
+        
+        double max_d;
+        //max_d = get_descendant(tmp_LIS.row(i), wavelet_img);
+        max_d = get_descendant(2, else_counter);
+        ++else_counter;
+        
+        if (max_d >= pow(2,n)) {
+          spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr);
+          
+          // Go through 4 cases, again, but simpler calculation
+          uint8_t x, y;
+          x = tmp_LIS(i, 0);
+          y = tmp_LIS(i, 1);
+          
+          for (uint8_t c=1; c<5; ++c) {// c for case iterator, $c \in {1, 2, 3, 4}$
+            uint8_t p, q;
+            get_pq(c, x, y, &p, &q);
+            
+            spiht_enc_helper_3(p, q, &LIS);
+            spiht_enc_helper_3(p, q, &tmp_LIS);
+          }
+          
+          LIS = EigenLibSupport::remove_row(LIS, LIS_idx);
+          --LIS_idx;
+        }
+        else {
+          spiht_enc_helper_4(0, &bit_str, &bit_str_idx, &bitctr, &bits_LIS);
+        }
+        //cout << "else {} of if (tmp_LIS(i,2)==0): END\n";
+      }// else {} of if (tmp_LIS(i,2)==0
+      
+      BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile1_event_1), "ERROR: Unmatched param");
     
-      i++;
-    }
+      // Increment the iterator idx of this while-loop:  while (i < tmp_LIS.rows() )
+      ++i;
+    }// while (i < tmp_LIS.rows() )
     
-    //Refinement Pass
-    tempvar=1;
-    value=floor(abs(pow(2,n_max-n+1)*m(LSP(tempvar,1-1),LSP(tempvar,2-1))));
-    while(value>=pow(2,n_max+2) && tempvar<=LSP.n_rows ){
-      if(bitctr>=max_bit_in){
-        break;  
+    string here_outerwhile_event_2 = here_outerwhile + "event-2/";
+    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_2), "ERROR: Unmatched param");
+    
+    // Refinement Pass
+    //cout << "Refinement Pass\n";
+    uint64_t LSP_idx = 0;
+    
+    double wavelet_img_character;
+    wavelet_img_character = wavelet_img( LSP(LSP_idx,0), LSP(LSP_idx,1) );
+    
+    double LSP_character = abs( pow(2,n_max-n+1)*wavelet_img_character);
+    LSP_character = floor(LSP_character);
+    
+    uint64_t inner_while_2_ctr = 0;
+    while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx < LSP.rows() )  ) { // INNER_WHILE_2 ////////////////////////////////////////
+      ++inner_while_2_ctr;
+      string here_innerwhile2 = string(here_outerwhile + "innerwhile2-" + lexical_cast<string>(inner_while_2_ctr) + "/");
+      //cout << "while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx <= LSP.rows() )  ): BEGIN\n";
+      //cout << "iteration_idx= " << inner_while_2_ctr << endl;
+      
+      string here_innerwhile2_event_1 = here_innerwhile2 + "event-1/";
+      
+      if (bitctr >= max_bits) {
+        return bit_str;
       }
-      //s = bitget(value,n_max+2);
-      bitset<10> bit_temp(value);
-      s = bit_temp[n_max+2];
-      out(index-1)=s;
-      bitctr++;
-      index++;
-      bits_LSP++;
-      tempvar++;
-      if(tempvar<=LSP.n_rows){
-        value=floor(abs(pow(2,n_max-n+1)*m(LSP(tempvar,1-1),LSP(tempvar,2-1))));
+      
+      const uint8_t bitset_size = 10;
+      bitset<bitset_size> LSP_character_bin(LSP_character);
+      
+      bit_str(bit_str_idx) = LSP_character_bin[n_max + 2 - 1];// minus one because index in cpp begins at 0; TODO why plus 2?
+      ++bitctr;
+      ++bit_str_idx;
+      ++LSP_idx;
+      ++bits_LSP;
+      
+      if (LSP_idx < LSP.rows()) {
+        wavelet_img_character = wavelet_img( LSP(LSP_idx,0), LSP(LSP_idx,1) );
+        LSP_character = abs( pow(2,n_max-n+1)*wavelet_img_character );
+        LSP_character = floor(LSP_character);
       }
+      
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile2_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_innerwhile2_event_1
+      ), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), "ERROR: Unmatched param");
+      
+    }// while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx <= LSP.rows() )  )
+    
+    string here_outerwhile_event_3 = here_outerwhile + "event-3/";
+    
+    // Decrement the n; TODO elaborate the def of n
+    --n;
+    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIS", EigenLibSupport::scalar2mat(bits_LIS), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIP", EigenLibSupport::scalar2mat(bits_LIP), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("n", EigenLibSupport::scalar2mat(n), here_outerwhile_event_3), "ERROR: Unmatched param");
+    
+    //cout << "if_counter= " << if_counter << endl;
+    //cout << "else_counter= " << else_counter << endl;
+    cout << "outerwhile: iter= " << outer_while_ctr << ": END  xxxxxxxxxxxxxxxxxxxxxxxxxxx\n";
+    if (outer_while_ctr==coding_while_iter_target) {
+      return bit_str;
     }
-    n--;
-  }
+  }// while (bitctr < max_bits)
 
+  //////////////////////////////////////////////////////////////////
+  cout << "spiht_enc(): END" << endl;
+  return bit_str;
 }
 
-char ECGSpiht::getDescendant(int i, int j, int type, arma::mat m_in, double value_out){
-  using namespace arma;
+void ECGSPIHT::spiht_enc_helper(const Eigen::MatrixXd& wavelet_img, const uint8_t& x, const uint8_t& y, const uint64_t& n, Eigen::MatrixXd* LSP, Eigen::MatrixXd* LIP, Eigen::RowVectorXd* bit_str, uint16_t* bit_str_idx, uint64_t* bitctr, uint64_t* bits_LIS) {
   using namespace std;
+  //cout << "spiht_enc_helper(): BEGIN\n";
   
-  printf("getDescendant\n");
-  int s_kecil = m_in.n_rows;
-  mat S;
+  //cout << "x= " << (int)x << endl;
+  //cout << "y= " << (int)y << endl;
   
-  int index=0;
-  int a=0;
-  int b=0;
-  mat mind;
-  mat nind;
-  vector <int> chk;
-  int len;
-  mat value;
-  
-  //variable pembantu c++
-  int nilai_awal;
-  int nilai_akhir;
-  int jarak;
-  int k,l,h;
-  int start_mind;
-  int start_nind;
-  mat S_temp;
-  
-  while((2*i-1)<s_kecil && (2*j-1)<s_kecil){
-    a = i-1;
-    b = j-1;
-
-    //isi mind  
-    nilai_awal = 2*(a+1)-1;
-    nilai_akhir = 2*(a+pow(2,index));
-    jarak = nilai_akhir-nilai_awal+1;
-    mind.set_size(1,jarak);  
-    for(k=0;k<jarak;k++){
-      mind(0,k)=nilai_awal++;
+  if ( abs(wavelet_img(x, y)) >= pow(2, n) ) {
+    //cout << "if ( abs(wavelet_img(x, y)) >= pow(2, n) ): BEGIN\n";
+    
+    // Assume: LSP is already filled (hence, not empty) up to this point
+    LSP->conservativeResize( LSP->rows()+1, LSP->cols() );// increment the size of rows by one
+    (*LSP)(LSP->rows()-1,0) = x;
+    (*LSP)(LSP->rows()-1,1) = y;
+    
+    (*bit_str)(*bit_str_idx) = 1;
+    
+    ++(*bitctr);
+    ++(*bit_str_idx);
+    ++(*bits_LIS);
+    
+    if (wavelet_img(x, y) >= 0) {
+      (*bit_str)(*bit_str_idx) = 1;
+    }
+    else {
+      (*bit_str)(*bit_str_idx) = 0;
     }
     
+    ++(*bitctr);
+    ++(*bit_str_idx);
+    ++(*bits_LIS);
     
-    //isi nind  
-    nilai_awal = 2*(b+1)-1;
-    nilai_akhir = 2*(b+pow(2,index));
-    jarak = nilai_akhir-nilai_awal+1;
-    nind.set_size(1,jarak);  
-    for(k=0;k<jarak;k++){
-      nind(0,k)=nilai_awal++;
-    }
+    //cout << "if ( abs(wavelet_img(x, y)) >= pow(2, n) ): END\n";
+  }// if ( abs(wavelet_img(x, y)) >= pow(2, n) ) 
+  else {
+    //cout << "else {} of if ( abs(wavelet_img(x, y)) >= pow(2, n) ): BEGIN\n";
     
-    //cek mind <= s
-    for(k=0;k<mind.n_cols;k++){
-      chk.push_back(mind(0,k)<=s_kecil);  
-      len=len+chk[k];
-    }
+    (*bit_str)(*bit_str_idx) = 0;
     
-    if(len<mind.n_cols){
-      mind.shed_cols(len+1,mind.n_cols);
-    }
+    ++(*bitctr);
+    ++(*bit_str_idx);
+    ++(*bits_LIS);
     
-    //cek nind <= s
-    chk.clear();
-    len = 0;
-    for(k=0;k<nind.n_cols;k++){
-      chk.push_back(nind(0,k)<=s_kecil);  
-      len=len+chk[k];
-    }
+    LIP->conservativeResize( LIP->rows()+1, LIP->cols() );
+    (*LIP)(LIP->rows()-1,0) = x;
+    (*LIP)(LIP->rows()-1,1) = y;
     
-    if(len<nind.n_cols){
-      nind.shed_cols(len+1,nind.n_cols);
-    }
-    
-    //S = [S reshape(m(mind,nind),1,[])];
-    S_temp.clear();
-    S_temp=m_in.submat(mind(0),mind(mind.n_cols-1),nind(0),nind(nind.n_cols-1));
-    S.set_size(1,S.n_cols+(mind.n_cols*nind.n_cols));
-    //S bakal ketambah terus
-    k=S.n_cols-(mind.n_cols*nind.n_cols);
-    for(l=0;l<S_temp.n_cols;l++){
-      for(h=0;h<S_temp.n_rows;h++){
-        S(0,k)=S_temp(h,l);  
-        k++;
-      }
-    }
-    
-    index++;
-    i=2*a+1;
-    j=2*b+1;
+    //cout << "else {} of if ( abs(wavelet_img(x, y)) >= pow(2, n) ): END\n";
   }
   
-  if(type==1){
-     //S(:,1:4) = [];; 
-     S.cols(4,S.n_cols-1);
-  }
-  
-  value = max(abs(S));
-  value_out=value(0,0);
+  //cout << "spiht_enc_helper(): END\n";
 }
 
+bool ECGSPIHT::spiht_enc_helper_2(const uint64_t& bitctr, const uint64_t& max_bits, Eigen::RowVectorXd* bit_str) {
+  if ((bitctr + 1) >= max_bits) {
+    if (bitctr < max_bits) {
+      bit_str->conservativeResize( bit_str->size()-1 );
+    }
+    
+    std::cout << "MAY IMMEDIATE RETURN bit_str\n";
+    return true;
+  }
+  return false;
+}
+
+void ECGSPIHT::spiht_enc_helper_3(const uint8_t& x, const uint8_t& y, Eigen::MatrixXd* LIS) {
+  // Assume: LIS is already filled (hence, not empty) up to this point
+  LIS->conservativeResize( LIS->rows()+1, LIS->cols() );
+  (*LIS)(LIS->rows()-1, 0) = x;
+  (*LIS)(LIS->rows()-1, 1) = y;
+  (*LIS)(LIS->rows()-1, 2) = 0;// TODO why 0?
+}
+
+void ECGSPIHT::spiht_enc_helper_4(const uint8_t bit_str_val, Eigen::RowVectorXd* bit_str, uint16_t* bit_str_idx, uint64_t* bitctr, uint64_t* bits_LIS_or_LIP) {
+  (*bit_str)(*bit_str_idx) = bit_str_val;
+  ++(*bitctr);
+  ++(*bit_str_idx);
+  if (bits_LIS_or_LIP != 0) {
+    ++(*bits_LIS_or_LIP);
+  }
+}
+
+double ECGSPIHT::get_descendant(const Eigen::RowVectorXd& LIS_row, const Eigen::MatrixXd& matrix) {
+  return 0.00;
+}
+
+double ECGSPIHT::get_descendant(const uint8_t& type, const uint64_t& ith) {
+  //std::cout << "ith= " << ith << std::endl;
+  
+  std::string desc_csv;
+  if (type==1)
+    desc_csv = "../../octave/main/out/spiht-var/max_d_upper.csv";
+  else if (type==2)
+    desc_csv = "../../octave/main/out/spiht-var/max_d_bottom.csv";
+   
+  Eigen::MatrixXd desc;
+  desc = CSVIO::load(desc_csv);
+  //std::cout << "desc.cols()= " << desc.cols() << std::endl;
+  assert( desc.size()!=0 );
+  
+  double val;
+  val = desc(0, ith);
+  //std::cout << "val= " << val << std::endl;
+ 
+  return val;
+}
+
+void ECGSPIHT::get_pq(const uint8_t& case_num, const uint8_t& x, const uint8_t& y, uint8_t* p, uint8_t* q) {
+  // The varibles p and q are used to 1) in spiht_enc_helper() and 2) in modifying tmp_LIS
+  // The formulas are copied from the Matlab implementation
+  // Notice "+1" at the end of each formulas as indexes begin at 0
+  switch(case_num) {
+    case 1: {
+      *p = (2 * x - 1) + 1;
+      *q = (2 * y - 1) + 1;
+      break;
+    }
+    case 2: {
+      *p = (2 * x - 1) + 1;
+      *q = (2 * y) + 1;
+      break;
+    }
+    case 3: {
+      *p = (2 * x) + 1;
+      *q = (2 * y - 1) + 1;
+      break;
+    }
+    case 4: {
+      *p = (2 * x) + 1;
+      *q = (2 * y) + 1;
+      break;
+    }
+    default: {
+      BOOST_ASSERT_MSG(false, std::string("ERROR: Unknown case").c_str());
+    }
+  }
+}
