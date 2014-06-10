@@ -9,7 +9,7 @@ int main() {
   using namespace lab1231_ecg_prj;
   
   // Read wavelet-img files
-  string wavelet_img_csv = "../../ws/octave/main/out/wavelet-img/wavelet_img-1.csv";// Assume: run from <...>/
+  string wavelet_img_csv = "../../octave/main/out/wavelet-img/wavelet_img-1.csv";// Assume: run from <...>/
   Eigen::MatrixXd wavelet_img;
   wavelet_img = CSVIO::load(wavelet_img_csv);
   
