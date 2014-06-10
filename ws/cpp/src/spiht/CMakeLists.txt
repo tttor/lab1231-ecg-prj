@@ -1,6 +1,5 @@
-add_library (ecg_spiht ecg_spiht.cc wavelet.cpp)
+add_library (lab1231ecgprj_sphit ecg_spiht.cc)
+target_link_libraries (lab1231ecgprj_sphit lab1231ecgprj_util)
 
-include_directories (${LAB1231_ECG_PRJ_SOURCE_DIR}/util) 
-include_directories (${fftw3_LIBRARIES}/fftw3) 
-include_directories (-I/usr/local/include/eigen3) 
-
+# add the install targets, invoked by: $ make install
+install (FILES "ecg_spiht.h" DESTINATION include/spiht)
