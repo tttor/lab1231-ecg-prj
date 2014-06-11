@@ -5,8 +5,8 @@ using namespace lab1231_ecg_prj;
 std::string Debugger::msg = std::string("");
 
 // These paths assume that the main exe is run from <...>/ws/cpp/build/
-std::string Debugger::param_root_path = std::string("../../octave/main/out/param/");
-std::string Debugger::out_param_root_path = std::string("../out/param/");
+std::string Debugger::octave_param_dir_path = std::string("../../octave/main/out/param/");
+std::string Debugger::cpp_param_dir_path = std::string("../out/param/");
 
 Eigen::MatrixXd Debugger::get_param(const std::string& param_path) {
   Eigen::MatrixXd param;
@@ -46,7 +46,7 @@ bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd&
   
   // Obtain the true param value 
   string param_star_path;
-  param_star_path = string(param_root_path + place + param_name);
+  param_star_path = string(octave_param_dir_path + place + param_name);
   //cout << "param_star_path= " << param_star_path << endl;
   
   Eigen::MatrixXd param_star;// _star means from Matlab's runs
@@ -84,11 +84,11 @@ void Debugger::reset(const uint64_t& base_outer_while_ctr) {
   using namespace boost;
  
   if (base_outer_while_ctr == 0) {
-    boost::filesystem::remove_all( boost::filesystem::path(out_param_root_path) );
-    boost::filesystem::create_directories(out_param_root_path);
+    boost::filesystem::remove_all( boost::filesystem::path(cpp_param_dir_path) );
+    boost::filesystem::create_directories(cpp_param_dir_path);
     return;
   }
-  fs::path dir_path(out_param_root_path);
+  fs::path dir_path(cpp_param_dir_path);
   fs::directory_iterator end_iter;
   
   for (fs::directory_iterator dir_iter(dir_path); dir_iter != end_iter; ++dir_iter) {
@@ -130,7 +130,7 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
     return;
   
   string param_dir_path;
-  param_dir_path = out_param_root_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
+  param_dir_path = cpp_param_dir_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
   
   //   
   *outer_while_ctr = base_outer_while_ctr;
@@ -206,11 +206,19 @@ void Debugger::write_param(const std::string& param_name, const Eigen::MatrixXd&
   using namespace std;
   
   string param_dir_path;
-  param_dir_path = string(out_param_root_path + place);
+  param_dir_path = string(cpp_param_dir_path + place);
   boost::filesystem::create_directories(param_dir_path);
   
   string param_path;
   param_path = string(param_dir_path + param_name);
   //cout << "param_path= " << param_path << endl;
   CSVIO::write(param, param_path);
+}
+
+void Debugger::set_cpp_param_dir_path(const std::string& path) {
+  cpp_param_dir_path = path;
+}
+
+void Debugger::set_octave_param_dir_path(const std::string& path) {
+  octave_param_dir_path = path;
 }
