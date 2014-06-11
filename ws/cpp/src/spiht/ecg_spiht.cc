@@ -32,22 +32,22 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const Eigen::MatrixXd& wavel
   }
   cout << "bit_str_all_frames.size()= " << bit_str_all_frames.size() << endl;
   
-  // Save
-  for (uint8_t i=0; i<target_frame; ++i){
-    if (!out_dir.empty()) {
-      string bit_str_csv = string(out_dir + "bit_str.csv");
-      cout << "bit_str_csv= " << bit_str_csv << endl;
+  //// Save
+  //for (uint8_t i=0; i<target_frame; ++i){
+    //if (!out_dir.empty()) {
+      //string bit_str_csv = string(out_dir + "bit_str.csv");
+      //cout << "bit_str_csv= " << bit_str_csv << endl;
       
-      RowVectorXd bit_str;
-      bit_str = bit_str_all_frames.at(i);
+      //RowVectorXd bit_str;
+      //bit_str = bit_str_all_frames.at(i);
       
-      MatrixXd bit_str_mat(1, bit_str.size());
-      bit_str_mat.row(0) = bit_str;
-      //cout << "bit_str_mat=\n" << bit_str_mat << endl;
+      //MatrixXd bit_str_mat(1, bit_str.size());
+      //bit_str_mat.row(0) = bit_str;
+      ////cout << "bit_str_mat=\n" << bit_str_mat << endl;
       
-      CSVIO::write(bit_str_mat, bit_str_csv);
-    }
-  }
+      //CSVIO::write(bit_str_mat, bit_str_csv);
+    //}
+  //}
   
   cout << "run_spiht(): END" << endl;
   return bit_str_all_frames;
