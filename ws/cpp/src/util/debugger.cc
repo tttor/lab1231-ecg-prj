@@ -80,6 +80,9 @@ bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd&
   }
   if (param != param_star) {
     msg += ": UNMATCHED ELEMENT VALUES";
+    if (param.size()==1) {
+      msg += ": WANT: " + lexical_cast<string>(param_star(0)) + " GOT: " + lexical_cast<string>(param(0));
+    }
     return false;
   }
   return true;
