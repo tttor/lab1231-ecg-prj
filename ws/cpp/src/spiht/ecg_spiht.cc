@@ -159,7 +159,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   uint64_t if_counter = 0;
   uint64_t else_counter = 0;
   
-  const uint64_t coding_while_iter_target = 2;
+  const uint64_t coding_while_iter_target = 4;
   uint64_t outer_while_ctr = 0;
   while (bitctr < max_bits) {/////////////// OUTER_WHILE //////////////////////////////////////////////
     ++outer_while_ctr;
@@ -221,13 +221,13 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       
       //cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": END\n";
     }// for (uint64_t i=0; i<tmp_LIP.rows(); ++i)
-    
+
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_1), "ERROR: Unmatched param");    
     BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIP", tmp_LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_1), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_1), "ERROR: Unmatched param");
     
     MatrixXd tmp_LIS = LIS;
     int64_t LIS_idx = -1;// TODO this looks silly (as the matlab implementation), fix it! 
@@ -264,9 +264,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
           
           // Go through 4 possible cases
           // TODO make use of get_pq()
-          uint8_t p, q;// used to access the wavelet_img matrix in 4 possible cases below
-          
-          uint8_t x, y;
+          uint64_t x, y;
           x = tmp_LIS(i, 0);
           y = tmp_LIS(i, 1);
           
@@ -277,7 +275,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
               return bit_str;
             }
           
-            uint8_t p, q;
+            uint64_t p, q;
             get_pq(c, x, y, &p, &q);
             
             spiht_enc_helper(wavelet_img, p, q, n, &LSP, &LIP, &bit_str, &bit_str_idx, &bitctr, &bits_LIS);
@@ -286,11 +284,9 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
           // Appendix step, TODO rationale?
           cout << "Appendix step: BEGIN:\n";
           
+          uint64_t p, q;
           p = (2 * (2*x) - 1) + 3;// plus 3 for idx correction
           q = (2 * (2*y) - 1) + 3;
-          //cout << "p = " << (int)p << endl;
-          //cout << "q = " << (int)q << endl;
-          //cout << "wavelet_img.rows() = " << wavelet_img.rows() << endl;
           
           if ( (p<wavelet_img.rows()) and (q<wavelet_img.rows()) ) { // Assume: wavelet_img.cols() == wavelet_img.rows()
             LIS.conservativeResize( LIS.rows()+1, LIS.cols() );
@@ -330,12 +326,12 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
           spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr);
           
           // Go through 4 cases, again, but simpler calculation
-          uint8_t x, y;
+          uint64_t x, y;
           x = tmp_LIS(i, 0);
           y = tmp_LIS(i, 1);
           
           for (uint8_t c=1; c<5; ++c) {// c for case iterator, $c \in {1, 2, 3, 4}$
-            uint8_t p, q;
+            uint64_t p, q;
             get_pq(c, x, y, &p, &q);
             
             spiht_enc_helper_3(p, q, &LIS);
@@ -351,27 +347,27 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         //cout << "else {} of if (tmp_LIS(i,2)==0): END\n";
       }// else {} of if (tmp_LIS(i,2)==0
       
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile1_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_innerwhile1_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_innerwhile1_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile1_event_1), "ERROR: Unmatched param");
     
       // Increment the iterator idx of this while-loop:  while (i < tmp_LIS.rows() )
       ++i;
-    }// while (i < tmp_LIS.rows() )
+    }// while (i < tmp_LIS.rows() ) ... INNERWHILE1
     
     string here_outerwhile_event_2 = here_outerwhile + "event-2/";
-    
+
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_2), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_2), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_2), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_2), "ERROR: Unmatched param");
     
     // Refinement Pass
     //cout << "Refinement Pass\n";
@@ -396,7 +392,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         return bit_str;
       }
       
-      const uint8_t bitset_size = 10;
+      const uint8_t bitset_size = 100;// TODO why 100? higher?
       bitset<bitset_size> LSP_character_bin(LSP_character);
       
       bit_str(bit_str_idx) = LSP_character_bin[n_max + 2 - 1];// minus one because index in cpp begins at 0; TODO why plus 2?
@@ -410,28 +406,28 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         LSP_character = abs( pow(2,n_max-n+1)*wavelet_img_character );
         LSP_character = floor(LSP_character);
       }
-      
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), "ERROR: Unmatched param");
+
       BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile2_event_1), "ERROR: Unmatched param");
       BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_innerwhile2_event_1
       ), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), "ERROR: Unmatched param");    
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), "ERROR: Unmatched param");
       
-    }// while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx <= LSP.rows() )  )
+    }// INNERWHILE2
     
     string here_outerwhile_event_3 = here_outerwhile + "event-3/";
     
     // Decrement the n; TODO elaborate the def of n
     --n;
-    
-    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), "ERROR: Unmatched param");
+
     BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_3), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_3), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIS", EigenLibSupport::scalar2mat(bits_LIS), here_outerwhile_event_3), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIP", EigenLibSupport::scalar2mat(bits_LIP), here_outerwhile_event_3), "ERROR: Unmatched param");
     BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("n", EigenLibSupport::scalar2mat(n), here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("n", EigenLibSupport::scalar2mat(n), here_outerwhile_event_3), "ERROR: Unmatched param");    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), "ERROR: Unmatched param");
     
     //cout << "if_counter= " << if_counter << endl;
     //cout << "else_counter= " << else_counter << endl;
@@ -439,14 +435,14 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     if (outer_while_ctr==coding_while_iter_target) {
       return bit_str;
     }
-  }// while (bitctr < max_bits)
+  }// while (bitctr < max_bits) ... OUTERWHILE
 
   //////////////////////////////////////////////////////////////////
   cout << "spiht_enc(): END" << endl;
   return bit_str;
 }
 
-void ECGSPIHT::spiht_enc_helper(const Eigen::MatrixXd& wavelet_img, const uint8_t& x, const uint8_t& y, const uint64_t& n, Eigen::MatrixXd* LSP, Eigen::MatrixXd* LIP, Eigen::RowVectorXd* bit_str, uint16_t* bit_str_idx, uint64_t* bitctr, uint64_t* bits_LIS) {
+void ECGSPIHT::spiht_enc_helper(const Eigen::MatrixXd& wavelet_img, const uint8_t& x, const uint8_t& y, const int64_t& n, Eigen::MatrixXd* LSP, Eigen::MatrixXd* LIP, Eigen::RowVectorXd* bit_str, uint16_t* bit_str_idx, uint64_t* bitctr, uint64_t* bits_LIS) {
   using namespace std;
   //cout << "spiht_enc_helper(): BEGIN\n";
   
@@ -537,9 +533,9 @@ double ECGSPIHT::get_descendant(const uint8_t& type, const uint64_t& ith) {
   
   std::string desc_csv;
   if (type==1)
-    desc_csv = "../../octave/main/out/spiht-var/max_d_upper.csv";
+    desc_csv = "../../octave/main/out/param/spiht-var/max_d_upper.csv";
   else if (type==2)
-    desc_csv = "../../octave/main/out/spiht-var/max_d_bottom.csv";
+    desc_csv = "../../octave/main/out/param/spiht-var/max_d_bottom.csv";
    
   Eigen::MatrixXd desc;
   desc = CSVIO::load(desc_csv);
@@ -553,7 +549,7 @@ double ECGSPIHT::get_descendant(const uint8_t& type, const uint64_t& ith) {
   return val;
 }
 
-void ECGSPIHT::get_pq(const uint8_t& case_num, const uint8_t& x, const uint8_t& y, uint8_t* p, uint8_t* q) {
+void ECGSPIHT::get_pq(const uint8_t& case_num, const uint64_t& x, const uint64_t& y, uint64_t* p, uint64_t* q) {
   // The varibles p and q are used to 1) in spiht_enc_helper() and 2) in modifying tmp_LIS
   // The formulas are copied from the Matlab implementation
   // Notice "+1" at the end of each formulas as indexes begin at 0
