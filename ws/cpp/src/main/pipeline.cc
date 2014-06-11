@@ -25,6 +25,10 @@ int main(int argc, char **argv) {
     Debugger::set_cpp_param_dir_path(argv[1]);
   }
   
+  if (argc==3) {
+    Debugger::set_cpp_base_param_dir_path(argv[2]);
+  }
+  
   vector<Eigen::RowVectorXd> bit_str;
   bit_str = ECGSPIHT::run_spiht(wavelet_img, CR, res, n_frame);
 

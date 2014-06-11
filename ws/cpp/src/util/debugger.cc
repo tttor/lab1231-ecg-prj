@@ -7,6 +7,7 @@ std::string Debugger::msg = std::string("");
 // These paths assume that the main exe is run from <...>/ws/cpp/build/
 std::string Debugger::octave_param_dir_path = std::string("../../octave/main/out/param/");
 std::string Debugger::cpp_param_dir_path = std::string("../out/param/");
+std::string Debugger::cpp_base_param_dir_path = cpp_param_dir_path;
 
 Eigen::MatrixXd Debugger::get_param(const std::string& param_path) {
   Eigen::MatrixXd param;
@@ -130,7 +131,7 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
     return;
   
   string param_dir_path;
-  param_dir_path = cpp_param_dir_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
+  param_dir_path = cpp_base_param_dir_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
   
   //   
   *outer_while_ctr = base_outer_while_ctr;
@@ -216,11 +217,16 @@ void Debugger::write_param(const std::string& param_name, const Eigen::MatrixXd&
 }
 
 void Debugger::set_cpp_param_dir_path(const std::string& path) {
-  std::cout << "SET cpp_param_dir_path to " << path << std::endl;
   cpp_param_dir_path = path;
+  std::cout << "SET cpp_param_dir_path to " << cpp_param_dir_path << std::endl;
+}
+
+void Debugger::set_cpp_base_param_dir_path(const std::string& path) {
+  cpp_base_param_dir_path = path;
+  std::cout << "SET cpp_base_param_dir_path to " << cpp_base_param_dir_path << std::endl;
 }
 
 void Debugger::set_octave_param_dir_path(const std::string& path) {
-  std::cout << "SET octave_param_dir_path to " << path << std::endl;
   octave_param_dir_path = path;
+  std::cout << "SET octave_base_param_dir_path to " << octave_param_dir_path << std::endl;
 }

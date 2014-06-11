@@ -27,9 +27,11 @@ class Debugger{
   static void write_param(const std::string& param_name, const Eigen::MatrixXd& param, const std::string& place);
   static void set_octave_param_dir_path(const std::string& path);
   static void set_cpp_param_dir_path(const std::string& path);
+  static void set_cpp_base_param_dir_path(const std::string& path);
   
   static std::string octave_param_dir_path;
   static std::string cpp_param_dir_path;
+  static std::string cpp_base_param_dir_path;
   static std::string msg;
 };
 
