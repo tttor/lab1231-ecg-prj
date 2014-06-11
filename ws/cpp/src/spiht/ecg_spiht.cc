@@ -164,7 +164,8 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   while (bitctr < max_bits) {/////////////// OUTER_WHILE //////////////////////////////////////////////
     ++outer_while_ctr;
     string here_outerwhile = string("outerwhile-" + lexical_cast<string>(outer_while_ctr) + "/");
-    cout << "outerwhile: iter= " << outer_while_ctr << ": BEGIN xxxxxxxxxxxxxxxxxxxxxxxx\n";
+    cout << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n";
+    cout << "outerwhile: iter= " << outer_while_ctr << ": BEGIN\n";
     
     string here_outerwhile_event_1 = here_outerwhile + "event-1/";
     
@@ -357,6 +358,8 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     
       // Increment the iterator idx of this while-loop:  while (i < tmp_LIS.rows() )
       ++i;
+      
+      cout << "innerwhile1: iter= " << inner_while_1_ctr << ": END" << endl;
     }// while (i < tmp_LIS.rows() ) ... INNERWHILE1
     
     string here_outerwhile_event_2 = here_outerwhile + "event-2/";
@@ -382,9 +385,9 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     uint64_t inner_while_2_ctr = 0;
     while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx < LSP.rows() )  ) { // INNER_WHILE_2 ////////////////////////////////////////
       ++inner_while_2_ctr;
+      cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
       string here_innerwhile2 = string(here_outerwhile + "innerwhile2-" + lexical_cast<string>(inner_while_2_ctr) + "/");
-      //cout << "while (  ( LSP_character >= pow(2,n_max+2) ) and ( LSP_idx <= LSP.rows() )  ): BEGIN\n";
-      //cout << "iteration_idx= " << inner_while_2_ctr << endl;
+      cout << "innerwhile2: iter= " << inner_while_2_ctr << ": BEGIN" << endl;
       
       string here_innerwhile2_event_1 = here_innerwhile2 + "event-1/";
       
@@ -413,6 +416,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), Debugger::msg.c_str());    
       BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), Debugger::msg.c_str());
       
+      cout << "innerwhile2: iter= " << inner_while_2_ctr << ": END" << endl;
     }// INNERWHILE2
     
     string here_outerwhile_event_3 = here_outerwhile + "event-3/";
