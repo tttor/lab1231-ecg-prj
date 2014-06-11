@@ -13,8 +13,7 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const Eigen::MatrixXd& wavel
   uint8_t n_lead = 8;
   uint64_t n_sample = 46260;
   
-  uint64_t max_bits;
-  max_bits = (n_sample*n_lead*res/CR) / n_frame;// Indeed: truncation!
+  const uint64_t max_bits = (n_sample*n_lead*res/CR) / n_frame;// Indeed: truncation!
   //cout << "max_bits= "<< max_bits << endl;
   
   vector<RowVectorXd> bit_str_all_frames(n_frame);
@@ -62,8 +61,6 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   using namespace boost;
 
   cout << "spiht_enc(): BEGIN" << endl;
-  Debugger::reset();
-  
   //-------------------------initialization------------------------------
   cout << "initialization" << endl;
   
@@ -73,11 +70,11 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   double max_val;
   max_val = wavelet_img.rowwise().maxCoeff().maxCoeff();
   
-  uint16_t n_max;// threshold to determine whether a wavelet coeff is significant
-  n_max = floor( log2(abs(max_val)) );
+  const uint16_t n_max = floor( log2(abs(max_val)) );// threshold to determine whether a wavelet coeff is significant
   //cout << "n_max= " << n_max << endl;
   
   RowVectorXd bit_str;
+  
   bit_str = MatrixXd::Ones(1, max_bits) * 2;// multiply by 2 for error detection, normal values are either 0 or 1
   bit_str(0) = wavelet_img.cols();
   bit_str(1) = n_max;
@@ -156,11 +153,21 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   n = n_max;
   
   // TODO remove me!
-  uint64_t if_counter = 0;
-  uint64_t else_counter = 0;
+  uint64_t if_ctr = 0;
+  uint64_t else_ctr = 0;
   
-  const uint64_t coding_while_iter_target = 4;
+  const uint64_t outer_while_ctr_target = 2;
   uint64_t outer_while_ctr = 0;
+  
+  const uint64_t base_outer_while_ctr = 1;
+  Debugger::load_outerwhile_param(base_outer_while_ctr, 
+                                  &LSP, &LIP, &LIS, &bits_LSP, &bits_LIP, &bits_LIS,
+                                  &bit_str, &bit_str_idx,
+                                  &n, &bitctr, &if_ctr, &else_ctr, &outer_while_ctr);
+  cout << "base_outer_while_ctr= " << base_outer_while_ctr << endl;
+  
+  Debugger::reset(base_outer_while_ctr);
+  
   while (bitctr < max_bits) {/////////////// OUTER_WHILE //////////////////////////////////////////////
     ++outer_while_ctr;
     string here_outerwhile = string("outerwhile-" + lexical_cast<string>(outer_while_ctr) + "/");
@@ -172,9 +179,9 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     // Sorting pass
     MatrixXd tmp_LIP = LIP;
     int64_t LIP_idx = -1;// TODO what does LIP_IDX point for in LIP?; -1 to synch with the Matlab's implementation
-        
+    
     for (uint64_t i=0; i<tmp_LIP.rows(); ++i) {
-      //cout << "for (uint2(10)=\n" << bit_str.head(10) << endl;
+      cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": BEGIN\n";
       
       ++LIP_idx;
       if ((bitctr + 1) >= max_bits) {
@@ -185,14 +192,12 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       }
       
       double wavelet_img_character;
-      wavelet_img_character = abs(wavelet_img(tmp_LIP(i,0),tmp_LIP(i,1)));
-      //cout << "wavelet_img_character= " << wavelet_img_character << endl;
+      wavelet_img_character = abs( wavelet_img(tmp_LIP(i,0),tmp_LIP(i,1)) );
       
       if ( wavelet_img_character >= pow(2, n) ) {
-        //cout << "if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
+        cout << "if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
         
         spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr, &bits_LIP);
-        
         if (  wavelet_img(tmp_LIP(i,0),tmp_LIP(i,1))  >= 0  ) {
           bit_str(bit_str_idx) = 1;
         }
@@ -213,14 +218,18 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         }
         LIP = EigenLibSupport::remove_row(LIP, LIP_idx);
         --LIP_idx;
+        
+        cout << "if ( wavelet_img_character >= pow(2, n) ): END\n";
       }
       else {
-        //cout << "else {} of if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
+        cout << "else {} of if ( wavelet_img_character >= pow(2, n) ): BEGIN\n";
         
         spiht_enc_helper_4(0, &bit_str, &bit_str_idx, &bitctr, &bits_LIP);
+        
+        cout << "else {} of if ( wavelet_img_character >= pow(2, n) ): END\n";
       }
       
-      //cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": END\n";
+      cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": END\n";
     }// for (uint64_t i=0; i<tmp_LIP.rows(); ++i)
 
     BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), Debugger::msg.c_str());
@@ -255,8 +264,8 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         
         double max_d;
         //max_d = get_descendant(tmp_LIS.row(i), wavelet_img);// TODO 
-        max_d = get_descendant(1, if_counter);
-        ++if_counter;
+        max_d = get_descendant(1, if_ctr);
+        ++if_ctr;
         
         if (max_d >= pow(2,n)) {
           //cout << "if (max_d >= pow(2,n)): BEGIN\n";
@@ -320,8 +329,8 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         
         double max_d;
         //max_d = get_descendant(tmp_LIS.row(i), wavelet_img);
-        max_d = get_descendant(2, else_counter);
-        ++else_counter;
+        max_d = get_descendant(2, else_ctr);
+        ++else_ctr;
         
         if (max_d >= pow(2,n)) {
           spiht_enc_helper_4(1, &bit_str, &bit_str_idx, &bitctr);
@@ -433,16 +442,21 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), Debugger::msg.c_str());
     BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), Debugger::msg.c_str());
     
-    //cout << "if_counter= " << if_counter << endl;
-    //cout << "else_counter= " << else_counter << endl;
+    Debugger::write_param("LSP", LSP, here_outerwhile_event_3);
+    Debugger::write_param("LIS", LIS, here_outerwhile_event_3);
+    Debugger::write_param("if_ctr", EigenLibSupport::scalar2mat(if_ctr), here_outerwhile_event_3);
+    Debugger::write_param("else_ctr", EigenLibSupport::scalar2mat(else_ctr), here_outerwhile_event_3);
+    
     cout << "outerwhile: iter= " << outer_while_ctr << ": END  xxxxxxxxxxxxxxxxxxxxxxxxxxx\n";
-    if (outer_while_ctr==coding_while_iter_target) {
+    if (outer_while_ctr==outer_while_ctr_target) {
+      cout << "outer_while_ctr==outer_while_ctr_target: RETURN\n";
       return bit_str;
     }
   }// while (bitctr < max_bits) ... OUTERWHILE
 
   //////////////////////////////////////////////////////////////////
   cout << "spiht_enc(): END" << endl;
+  
   return bit_str;
 }
 
@@ -520,6 +534,8 @@ void ECGSPIHT::spiht_enc_helper_3(const uint8_t& x, const uint8_t& y, Eigen::Mat
 }
 
 void ECGSPIHT::spiht_enc_helper_4(const uint8_t bit_str_val, Eigen::RowVectorXd* bit_str, uint16_t* bit_str_idx, uint64_t* bitctr, uint64_t* bits_LIS_or_LIP) {
+  using namespace std;
+  
   (*bit_str)(*bit_str_idx) = bit_str_val;
   ++(*bitctr);
   ++(*bit_str_idx);
