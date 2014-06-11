@@ -16,7 +16,6 @@ class CSVIO{
  public:
   static Eigen::MatrixXd load(std::string csv_path);
   static void write(Eigen::MatrixXd, std::string csv_path);
-  
 };
 
 }// namespace lab1231_ecg_prj

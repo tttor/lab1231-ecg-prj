@@ -42,3 +42,8 @@ Eigen::MatrixXd EigenLibSupport::scalar2mat(const double& scalar) {
   
   return mat;
 }
+
+double EigenLibSupport::mat2scalar(const Eigen::MatrixXd& mat){
+  assert(mat.size()==1);
+  return mat(0);
+}
