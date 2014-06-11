@@ -216,9 +216,11 @@ void Debugger::write_param(const std::string& param_name, const Eigen::MatrixXd&
 }
 
 void Debugger::set_cpp_param_dir_path(const std::string& path) {
+  std::cout << "SET cpp_param_dir_path to " << path << std::endl;
   cpp_param_dir_path = path;
 }
 
 void Debugger::set_octave_param_dir_path(const std::string& path) {
+  std::cout << "SET octave_param_dir_path to " << path << std::endl;
   octave_param_dir_path = path;
 }
