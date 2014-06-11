@@ -5,7 +5,7 @@
 #include <util/debugger.h>
 #include <spiht/ecg_spiht.h>
 
-int main() {
+int main(int argc, char **argv) {
   using namespace std;
   using namespace lab1231_ecg_prj;
   
@@ -21,7 +21,10 @@ int main() {
   string out_dir = "../out/bit-str/";
   
   Debugger::set_octave_param_dir_path(std::string("../../octave/main/out/param/"));
-  Debugger::set_cpp_param_dir_path(std::string("../out/param/"));
+  
+  if (argc==2) {
+    Debugger::set_cpp_param_dir_path(argv[1]);
+  }
   
   vector<Eigen::RowVectorXd> bit_str;
   bit_str = ECGSPIHT::run_spiht(wavelet_img, CR, res, n_frame, out_dir);
