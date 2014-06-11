@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
   const uint8_t CR = 4;
   const uint64_t res = 12;
   const uint64_t n_frame = 18;
-  string out_dir = "../out/bit-str/";
   
   Debugger::set_octave_param_dir_path(std::string("../../octave/main/out/param/"));
   
@@ -27,7 +26,7 @@ int main(int argc, char **argv) {
   }
   
   vector<Eigen::RowVectorXd> bit_str;
-  bit_str = ECGSPIHT::run_spiht(wavelet_img, CR, res, n_frame, out_dir);
+  bit_str = ECGSPIHT::run_spiht(wavelet_img, CR, res, n_frame);
 
   cout << "end...\n";
   return 0;
