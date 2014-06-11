@@ -222,12 +222,12 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       //cout << "for (uint64_t i=0; i<tmp_LIP.rows(); ++i), i= " << i << ": END\n";
     }// for (uint64_t i=0; i<tmp_LIP.rows(); ++i)
 
-    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_1), "ERROR: Unmatched param");    
-    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIP", tmp_LIP, here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_1), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_1), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_1), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_1), Debugger::msg.c_str());    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_1), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIP", tmp_LIP, here_outerwhile_event_1), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_1), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_1), Debugger::msg.c_str());
     
     MatrixXd tmp_LIS = LIS;
     int64_t LIS_idx = -1;// TODO this looks silly (as the matlab implementation), fix it! 
@@ -347,13 +347,13 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         //cout << "else {} of if (tmp_LIS(i,2)==0): END\n";
       }// else {} of if (tmp_LIS(i,2)==0
       
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_innerwhile1_event_1), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile1_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_innerwhile1_event_1), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile1_event_1), Debugger::msg.c_str());
     
       // Increment the iterator idx of this while-loop:  while (i < tmp_LIS.rows() )
       ++i;
@@ -361,13 +361,13 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     
     string here_outerwhile_event_2 = here_outerwhile + "event-2/";
 
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_2), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_2), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("LSP", LSP, here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIS", LIS, here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("tmp_LIS", tmp_LIS, here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_2), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_2), Debugger::msg.c_str());
     
     // Refinement Pass
     //cout << "Refinement Pass\n";
@@ -407,11 +407,11 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         LSP_character = floor(LSP_character);
       }
 
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile2_event_1), "ERROR: Unmatched param");
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_innerwhile2_event_1), Debugger::msg.c_str());
       BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_innerwhile2_event_1
-      ), "ERROR: Unmatched param");
-      BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), "ERROR: Unmatched param");    
-      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), "ERROR: Unmatched param");
+      ), Debugger::msg.c_str());
+      BOOST_ASSERT_MSG(Debugger::debug_param("LSP_character", EigenLibSupport::scalar2mat(LSP_character), here_innerwhile2_event_1), Debugger::msg.c_str());    
+      BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_innerwhile2_event_1), Debugger::msg.c_str());
       
     }// INNERWHILE2
     
@@ -420,14 +420,14 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
     // Decrement the n; TODO elaborate the def of n
     --n;
 
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIS", EigenLibSupport::scalar2mat(bits_LIS), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIP", EigenLibSupport::scalar2mat(bits_LIP), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("n", EigenLibSupport::scalar2mat(n), here_outerwhile_event_3), "ERROR: Unmatched param");    
-    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), "ERROR: Unmatched param");
-    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), "ERROR: Unmatched param");
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str_idx", EigenLibSupport::scalar2mat(bit_str_idx), here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIS", EigenLibSupport::scalar2mat(bits_LIS), here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LIP", EigenLibSupport::scalar2mat(bits_LIP), here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bits_LSP", EigenLibSupport::scalar2mat(bits_LSP), here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("n", EigenLibSupport::scalar2mat(n), here_outerwhile_event_3), Debugger::msg.c_str());    
+    BOOST_ASSERT_MSG(Debugger::debug_param("LIP", LIP, here_outerwhile_event_3), Debugger::msg.c_str());
+    BOOST_ASSERT_MSG(Debugger::debug_param("bit_str", bit_str, here_outerwhile_event_3), Debugger::msg.c_str());
     
     //cout << "if_counter= " << if_counter << endl;
     //cout << "else_counter= " << else_counter << endl;

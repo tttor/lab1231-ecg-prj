@@ -2,6 +2,8 @@
 
 using namespace lab1231_ecg_prj;
 
+std::string Debugger::msg = std::string("");
+
 // These paths assume that the main exe is run from <...>/ws/cpp/build/
 std::string Debugger::param_root_path = std::string("../../octave/main/out/param/");
 std::string Debugger::out_param_root_path = std::string("../out/param/");
@@ -13,10 +15,13 @@ Eigen::MatrixXd Debugger::get_param(const std::string& param_path) {
   return param;
 }
 
-bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd& raw_param, const std::string& place) {
+bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd& raw_param, const std::string& place, bool write) {
   using namespace std;
   using namespace boost;
   
+  msg.clear();
+  msg += "ASSERTION FAILURE: AT:" + place;
+
   // Split
   vector<string> place_comp;
   split( place_comp, place, boost::algorithm::is_any_of("/"), token_compress_on );
@@ -68,10 +73,13 @@ bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd&
   CSVIO::write(param, param_path);
   
   // Test
+  msg += ": " + param_name;
   if (param.size() != param_star.size()) {
+    msg += ": UNMATCHED SIZE";
     return false;
   }
   if (param != param_star) {
+    msg += ": UNMATCHED ELEMENT VALUES";
     return false;
   }
   return true;
