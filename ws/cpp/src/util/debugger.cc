@@ -83,6 +83,8 @@ void Debugger::reset(const uint64_t& base_outer_while_ctr) {
   namespace fs = boost::filesystem;
   using namespace std;
   using namespace boost;
+  
+  cout << "Debugger::reset(): BEGIN\n";
  
   if (base_outer_while_ctr == 0) {
     boost::filesystem::remove_all( boost::filesystem::path(cpp_param_dir_path) );
@@ -113,6 +115,8 @@ void Debugger::reset(const uint64_t& base_outer_while_ctr) {
       fs::remove_all(*dir_iter);
     }
   }
+  
+  cout << "Debugger::reset(): END\n";
 }
 
 void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
@@ -144,9 +148,9 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
   //LIP
   MatrixXd saved_LIP;
   saved_LIP = CSVIO::load(string(param_dir_path+"LIP"));
-  cout << "saved_LIP=\n" << saved_LIP << endl;
+  //cout << "saved_LIP=\n" << saved_LIP << endl;
   *LIP = saved_LIP;
-  cout << "LIP=\n" << *LIP << endl;
+  //cout << "LIP=\n" << *LIP << endl;
   
   //LIS
   MatrixXd saved_LIS;
@@ -182,13 +186,13 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
   MatrixXd saved_n;
   saved_n = CSVIO::load(string(param_dir_path+"n"));
   *n = EigenLibSupport::mat2scalar(saved_n);
-  cout << "*n= " << *n << endl;
+  //cout << "*n= " << *n << endl;
   
   //bitctr
   MatrixXd saved_bitctr;
   saved_bitctr = CSVIO::load(string(param_dir_path+"bitctr"));
   *bitctr = EigenLibSupport::mat2scalar(saved_bitctr);
-  cout << "*bitctr= " << *bitctr << endl;
+  //cout << "*bitctr= " << *bitctr << endl;
 
   //if_ctr
   MatrixXd saved_if_ctr;
