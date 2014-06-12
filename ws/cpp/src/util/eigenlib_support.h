@@ -11,6 +11,7 @@ class EigenLibSupport {
   static Eigen::MatrixXd remove_row(const Eigen::MatrixXd& M, const uint64_t& ith);
   static Eigen::MatrixXd scalar2mat(const double& scalar);
   static double mat2scalar(const Eigen::MatrixXd& mat);
+  static double truncate(const double& val, const uint8_t& precision, const std::string type="nearest");
 };
 
 }// namespace lab1231_ecg_prj

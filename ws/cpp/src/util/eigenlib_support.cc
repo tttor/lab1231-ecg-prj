@@ -47,3 +47,22 @@ double EigenLibSupport::mat2scalar(const Eigen::MatrixXd& mat){
   assert(mat.size()==1);
   return mat(0);
 }
+
+double EigenLibSupport::truncate(const double& val, const uint8_t& precision, const std::string type) {
+  const uint64_t factor = pow(10, precision);
+  
+  double result;
+  if (type == "rounded_down"){
+    result = floor(val * factor) / factor;
+  } 
+  else if (type == "nearest"){
+    result = floor(val * factor + 0.5) / factor;  
+  }
+  else if(type=="rounded_up"){
+    result = ceil(val * factor) / factor;
+  }
+  else {
+    assert(false && "Unknwon truncation type");
+  }
+  return result;
+}
