@@ -5,8 +5,9 @@ using namespace lab1231_ecg_prj;
 std::string Debugger::msg = std::string("");
 
 // These paths assume that the main exe is run from <...>/ws/cpp/build/
-std::string Debugger::param_root_path = std::string("../../octave/main/out/param/");
-std::string Debugger::out_param_root_path = std::string("../out/param/");
+std::string Debugger::octave_param_dir_path = std::string("../../octave/main/out/param/");
+std::string Debugger::cpp_param_dir_path = std::string("../out/param/");
+std::string Debugger::cpp_base_param_dir_path = cpp_param_dir_path;
 
 Eigen::MatrixXd Debugger::get_param(const std::string& param_path) {
   Eigen::MatrixXd param;
@@ -18,8 +19,11 @@ Eigen::MatrixXd Debugger::get_param(const std::string& param_path) {
 bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd& param, const std::string& place, bool write) {
   using namespace std;
   using namespace boost;
+  cout << "Debugger::debug_param(): BEGIN\n";
+  cout << "param_name= " << param_name << " AT " << place << endl;
   
   if (write) {
+    cout << "writing ...\n";
     write_param(param_name, param, place);
   }
   
@@ -27,6 +31,7 @@ bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd&
   msg += "ASSERTION FAILURE: AT:" + place;
 
   // Split
+  cout << "splitting...\n";
   vector<string> place_comp;
   split( place_comp, place, boost::algorithm::is_any_of("/"), token_compress_on );
   place_comp.erase(place_comp.end()-1);// remove the empty element as there is an ending "/"
@@ -45,36 +50,61 @@ bool Debugger::debug_param(const std::string& param_name, const Eigen::MatrixXd&
   uint16_t event_num = lexical_cast<uint16_t>(eventstr_comp.at(1));
   
   // Obtain the true param value 
+  cout << "getting the param star ...\n";
   string param_star_path;
-  param_star_path = string(param_root_path + place + param_name);
+  param_star_path = string(octave_param_dir_path + place + param_name);
   //cout << "param_star_path= " << param_star_path << endl;
   
   Eigen::MatrixXd param_star;// _star means from Matlab's runs
   param_star = get_param(param_star_path);
 
   // Adapt the param_star matrix that contains indexes since Matlab's index begins at 1, while cpp's begin at 0, hence _minus_
+  cout << "adapting the idx ...\n";
   if (param_name=="LIP" or param_name=="tmp_LIP" or param_name=="LSP" or param_name=="tmp_LSP" or param_name=="bit_str_idx") {
-    param_star = param_star - Eigen::MatrixXd::Ones(param.rows(),param.cols());
+    param_star = param_star - Eigen::MatrixXd::Ones(param_star.rows(),param_star.cols());
   }
   else if (param_name=="LIS" or param_name=="tmp_LIS") {
     // Note: the third column does _not_ contain indexes
-    param_star.col(0) = param_star.col(0) - Eigen::MatrixXd::Ones(param.rows(),1); 
-    param_star.col(1) = param_star.col(1) - Eigen::MatrixXd::Ones(param.rows(),1); 
+    param_star.col(0) = param_star.col(0) - Eigen::MatrixXd::Ones(param_star.rows(),1); 
+    param_star.col(1) = param_star.col(1) - Eigen::MatrixXd::Ones(param_star.rows(),1); 
   }
   
   // Test
+  cout << "testing...\n";
   msg += ": " + param_name;
-  if (param.size() != param_star.size()) {
-    msg += ": UNMATCHED SIZE";
+  
+  cout << "? (param.rows() != param_star.rows())\n";
+  //cout << "param.rows()= " << param.rows() << endl;
+  //cout << "param_star.rows()= " << param_star.rows() << endl;
+  if (param.rows() != param_star.rows()) {
+    msg += ": UNMATCHED N_ROW: WANT: " + lexical_cast<string>(param_star.rows()) + " GOT: " + lexical_cast<string>(param.rows());
+
+    cout << "Debugger::debug_param(): END\n";
     return false;
   }
+  
+  cout << "? (param.cols() != param_star.cols())\n";
+  //cout << "param.cols()= " << param.cols() << endl;
+  //cout << "param_star.cols()= " << param_star.cols() << endl;
+  if (param.cols() != param_star.cols()) {
+    msg += ": UNMATCHED N_COL: WANT: " + lexical_cast<string>(param_star.cols()) + " GOT: " + lexical_cast<string>(param.cols());
+    
+    cout << "Debugger::debug_param(): END\n";
+    return false;
+  }
+  
+  cout << "? if (param != param_star)\n";
   if (param != param_star) {
     msg += ": UNMATCHED ELEMENT VALUES";
     if (param.size()==1) {
       msg += ": WANT: " + lexical_cast<string>(param_star(0)) + " GOT: " + lexical_cast<string>(param(0));
     }
+    
+    cout << "Debugger::debug_param(): END\n";
     return false;
   }
+
+  cout << "Debugger::debug_param(): END\n";
   return true;
 }
 
@@ -82,13 +112,18 @@ void Debugger::reset(const uint64_t& base_outer_while_ctr) {
   namespace fs = boost::filesystem;
   using namespace std;
   using namespace boost;
+  
+  cout << "Debugger::reset(): BEGIN\n";
  
   if (base_outer_while_ctr == 0) {
-    boost::filesystem::remove_all( boost::filesystem::path(out_param_root_path) );
-    boost::filesystem::create_directories(out_param_root_path);
+    cout << "removing " << cpp_param_dir_path << endl;
+    boost::filesystem::remove_all( boost::filesystem::path(cpp_param_dir_path) );
+    boost::filesystem::create_directories(cpp_param_dir_path);
+    
+    cout << "Debugger::reset(): END\n";
     return;
   }
-  fs::path dir_path(out_param_root_path);
+  fs::path dir_path(cpp_param_dir_path);
   fs::directory_iterator end_iter;
   
   for (fs::directory_iterator dir_iter(dir_path); dir_iter != end_iter; ++dir_iter) {
@@ -112,6 +147,8 @@ void Debugger::reset(const uint64_t& base_outer_while_ctr) {
       fs::remove_all(*dir_iter);
     }
   }
+  
+  cout << "Debugger::reset(): END\n";
 }
 
 void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
@@ -126,11 +163,15 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
   
   cout << "Debugger::load_outerwhile_param(): BEGIN\n";
   
-  if (base_outer_while_ctr == 0)
+  if (base_outer_while_ctr == 0) {
+    cout << "(base_outer_while_ctr == 0)\n"; 
+    cout << "Debugger::load_outerwhile_param(): END\n";
     return;
+  }
+  
   
   string param_dir_path;
-  param_dir_path = out_param_root_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
+  param_dir_path = cpp_base_param_dir_path + "outerwhile-" + lexical_cast<string>(base_outer_while_ctr) + "/" + "event-3/";
   
   //   
   *outer_while_ctr = base_outer_while_ctr;
@@ -143,9 +184,9 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
   //LIP
   MatrixXd saved_LIP;
   saved_LIP = CSVIO::load(string(param_dir_path+"LIP"));
-  cout << "saved_LIP=\n" << saved_LIP << endl;
+  //cout << "saved_LIP=\n" << saved_LIP << endl;
   *LIP = saved_LIP;
-  cout << "LIP=\n" << *LIP << endl;
+  //cout << "LIP=\n" << *LIP << endl;
   
   //LIS
   MatrixXd saved_LIS;
@@ -181,13 +222,13 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
   MatrixXd saved_n;
   saved_n = CSVIO::load(string(param_dir_path+"n"));
   *n = EigenLibSupport::mat2scalar(saved_n);
-  cout << "*n= " << *n << endl;
+  //cout << "*n= " << *n << endl;
   
   //bitctr
   MatrixXd saved_bitctr;
   saved_bitctr = CSVIO::load(string(param_dir_path+"bitctr"));
   *bitctr = EigenLibSupport::mat2scalar(saved_bitctr);
-  cout << "*bitctr= " << *bitctr << endl;
+  //cout << "*bitctr= " << *bitctr << endl;
 
   //if_ctr
   MatrixXd saved_if_ctr;
@@ -204,13 +245,31 @@ void Debugger::load_outerwhile_param( const uint64_t& base_outer_while_ctr,
 
 void Debugger::write_param(const std::string& param_name, const Eigen::MatrixXd& param, const std::string& place) {
   using namespace std;
+  //cout << "Debugger::write_param(): BEGIN\n";
   
   string param_dir_path;
-  param_dir_path = string(out_param_root_path + place);
+  param_dir_path = string(cpp_param_dir_path + place);
   boost::filesystem::create_directories(param_dir_path);
   
   string param_path;
   param_path = string(param_dir_path + param_name);
   //cout << "param_path= " << param_path << endl;
   CSVIO::write(param, param_path);
+  
+  //cout << "Debugger::write_param(): END\n";
+}
+
+void Debugger::set_cpp_param_dir_path(const std::string& path) {
+  cpp_param_dir_path = path;
+  std::cout << "SET cpp_param_dir_path to " << cpp_param_dir_path << std::endl;
+}
+
+void Debugger::set_cpp_base_param_dir_path(const std::string& path) {
+  cpp_base_param_dir_path = path;
+  std::cout << "SET cpp_base_param_dir_path to " << cpp_base_param_dir_path << std::endl;
+}
+
+void Debugger::set_octave_param_dir_path(const std::string& path) {
+  octave_param_dir_path = path;
+  std::cout << "SET octave_base_param_dir_path to " << octave_param_dir_path << std::endl;
 }
