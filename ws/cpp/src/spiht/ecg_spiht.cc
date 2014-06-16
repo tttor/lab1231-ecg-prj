@@ -288,11 +288,13 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         max_d = get_descendant(tmp_LIS.row(i), wavelet_img);
         //Debugger::write_param("max_d_upper", EigenLibSupport::scalar2mat(max_d), here_innerwhile1_event_1);
         
+        #ifdef DEBUG ON
         double max_d_star;
         max_d_star = get_descendant(1, if_ctr);
         
         BOOST_ASSERT_MSG(max_d == max_d_star, string("max_d != max_d_star AT IF{} UPPER: WANT: " + lexical_cast<string>(max_d_star) + " GOT: " + lexical_cast<string>(max_d)).c_str());
         //cout <<  "max_d UPPER: WANT: " << lexical_cast<string>(max_d_star) << " GOT: " << lexical_cast<string>(max_d) << endl;
+        #endif
         
         if (max_d >= pow(2,n)) {
           cout << "if (max_d >= pow(2,n)): BEGIN\n";
@@ -370,11 +372,13 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         max_d = get_descendant(tmp_LIS.row(i), wavelet_img);
         //Debugger::write_param("max_d_bottom", EigenLibSupport::scalar2mat(max_d), here_innerwhile1_event_1 );
         
+        #ifdef DEBUG_ON
         double max_d_star;
         max_d_star = get_descendant(2, else_ctr);
         
         BOOST_ASSERT_MSG(max_d == max_d_star, string("max_d != max_d_star AT ELSE{} BOTTOM: WANT: " + lexical_cast<string>(max_d_star) + " GOT: " + lexical_cast<string>(max_d)).c_str());
         //cout <<  "max_d BOTTOM: WANT: " << lexical_cast<string>(max_d_star) << " GOT: " << lexical_cast<string>(max_d) << endl;
+        #endif
         
         if (max_d >= pow(2,n)) {
           cout << "if (max_d >= pow(2,n)): BEGIN\n";
