@@ -7,4 +7,5 @@ addpath('./wavelet-trans')
 addpath('./spiht')
 addpath('./eval')
 addpath('./util')
+addpath('./test')
 
