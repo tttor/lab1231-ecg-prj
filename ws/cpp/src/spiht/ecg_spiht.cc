@@ -18,7 +18,7 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const std::vector<Eigen::Mat
   vector<RowVectorXd> bit_str_all_frames(n_frame);
   
   // FAILED frame ith= 10, 12, 15, 16, 17
-  const uint8_t ith_frame_begin = 10;// from 0
+  const uint8_t ith_frame_begin = 10;// \in 0,1,2,...
   const uint8_t ith_frame_end = 11;//n_frame;// post the end
   for (uint8_t i=ith_frame_begin; i<ith_frame_end; ++i) {
     cout << "RUNNING SPIHT CODING FOR FRAME ith= " << lexical_cast<string>(i+1) << ": BEGIN zzzzzzzzzzzzzzzzzzzzzzzzzzzz"<< endl;
@@ -552,8 +552,13 @@ void ECGSPIHT::spiht_enc_helper(const Eigen::MatrixXd& wavelet_img, const uint8_
   if ( abs(wavelet_img(x, y)) >= pow(2, n) ) {
     cout << "if ( abs(wavelet_img(x, y)) >= pow(2, n) ): BEGIN\n";
     
-    // Assume: LSP is already filled (hence, not empty) up to this point
-    LSP->conservativeResize( LSP->rows()+1, LSP->cols() );// increment the size of rows by one
+    if (LSP->size() == 0) {
+      LSP->conservativeResize(1, 2);// yes, two columns
+    }
+    else {
+      LSP->conservativeResize( LSP->rows()+1, LSP->cols() );// increment the size of rows by one
+    }
+    
     (*LSP)(LSP->rows()-1,0) = x;
     (*LSP)(LSP->rows()-1,1) = y;
     
