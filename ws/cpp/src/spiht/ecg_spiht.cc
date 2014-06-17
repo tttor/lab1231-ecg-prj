@@ -553,6 +553,7 @@ void ECGSPIHT::spiht_enc_helper(const Eigen::MatrixXd& wavelet_img, const uint8_
     cout << "if ( abs(wavelet_img(x, y)) >= pow(2, n) ): BEGIN\n";
     
     // Assume: LSP is already filled (hence, not empty) up to this point
+    BOOST_ASSERT_MSG(LSP->size() != 0, "ASSUMPTION VIOLATION: LSP->size() == 0");
     LSP->conservativeResize( LSP->rows()+1, LSP->cols() );// increment the size of rows by one
     (*LSP)(LSP->rows()-1,0) = x;
     (*LSP)(LSP->rows()-1,1) = y;
