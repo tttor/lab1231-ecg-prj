@@ -168,7 +168,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
   
   #ifdef DEBUG_ON
   //outer_while_ctr_target = 11;// Valid target
-  //base_outer_while_ctr = 5;// Valid base
+  //base_outer_while_ctr = 2;// Valid base
   Debugger::load_outerwhile_param(base_outer_while_ctr, 
                                   &LSP, &LIP, &LIS, &bits_LSP, &bits_LIP, &bits_LIS,
                                   &bit_str, &bit_str_idx,
@@ -292,8 +292,9 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         double max_d_star;
         max_d_star = get_descendant(1, if_ctr);
         
-        cout << "asserting (max_d == max_d_star)\n";
+        cout << "asserting (max_d == max_d_star)";
         BOOST_ASSERT_MSG(max_d == max_d_star, string("max_d != max_d_star AT IF{} UPPER: WANT: " + lexical_cast<string>(max_d_star) + " GOT: " + lexical_cast<string>(max_d)).c_str());
+        cout << ": PASSED\n";
         //cout <<  "max_d UPPER: WANT: " << lexical_cast<string>(max_d_star) << " GOT: " << lexical_cast<string>(max_d) << endl;
         #endif
         
@@ -379,6 +380,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
         
         cout << "asserting (max_d == max_d_star)\n";
         BOOST_ASSERT_MSG(max_d == max_d_star, string("max_d != max_d_star AT ELSE{} BOTTOM: WANT: " + lexical_cast<string>(max_d_star) + " GOT: " + lexical_cast<string>(max_d)).c_str());
+        cout << ": PASSED\n";
         //cout <<  "max_d BOTTOM: WANT: " << lexical_cast<string>(max_d_star) << " GOT: " << lexical_cast<string>(max_d) << endl;
         #endif
         
@@ -464,8 +466,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       
       string here_innerwhile2_event_1 = here_innerwhile2 + "event-1/";
       
-      cout << "bitctr= " << bitctr << endl;
-      cout << "max_bits= " << max_bits << endl;
+      Debugger::write_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile2_event_1);
       if (bitctr >= max_bits) {
         cout << "(bitctr >= max_bits): RETURN\n";
         //#ifdef DEBUG_ON
@@ -629,6 +630,9 @@ double ECGSPIHT::get_descendant(const Eigen::RowVectorXd& LIS_row, const Eigen::
   using namespace boost;
   cout << "get_descendant(): BEGIN\n";
   cout << "input LIS_row= " << LIS_row << endl;
+  //const string csv_dir = "/home/tor/robotics/prj/010/ws/lab1231-ecg-prj/ws/cpp/out/debug/S-in-while/";
+  //boost::filesystem::remove_all( boost::filesystem::path(csv_dir) );
+  //boost::filesystem::create_directories(csv_dir);
   
   // The modification is used to ease the matrix indexing since many indexing formulas below are really _unclear_ about where they come from.
   // As a result, we can treat all indexing formulas as _is_ (exactly the same with those in Matlab).
@@ -643,13 +647,14 @@ double ECGSPIHT::get_descendant(const Eigen::RowVectorXd& LIS_row, const Eigen::
   // yes, truncate from double
   uint64_t val_1 = LIS_row(0) + 1;
   uint64_t val_2 = LIS_row(1) + 1; 
-  cout << "val_1= " << val_1 << endl;
-  cout << "val_2= " << val_2 << endl;
+  //cout << "val_1= " << val_1 << endl;
+  //cout << "val_2= " << val_2 << endl;
   
   uint64_t index = 0;// TODO More descriptive name? is it truly an index (as 0 is invalid idx in Matlab)? 
   uint64_t a = 0;// More descriptive name for "a"?
   uint64_t b = 0;// More descriptive name for "b"?
-    
+  
+  uint64_t while_ctr = 0;
   while ( ((2*val_1-1)<(mod_mat.rows()-1)) and ((2*val_2-1)<(mod_mat.cols()-1)) ) {// Minus one for n_row and n_col calculation as weuse mod_mat. TODO where do the formulas come from?
     //cout << "while (  ( (2*val_1-1) < mat.rows() ) and ...): BEGIN iter= " << lexical_cast<string>(index+1) << endl;
     
@@ -705,22 +710,54 @@ double ECGSPIHT::get_descendant(const Eigen::RowVectorXd& LIS_row, const Eigen::
     val_1 = 2 * a + 1;//TODO where do the formulas come from?
     val_2 = 2 * b + 1;//TODO where do the formulas come from?
     
+    ////
+    //MatrixXd S_mat(1, S.size());
+    //S_mat.row(0) = S;
+    //string S_csv_path = csv_dir + "S-" + lexical_cast<string>(while_ctr) + ".csv";
+    //CSVIO::write(S_mat, S_csv_path);
+    
+    ++while_ctr;
     //cout << "while (  ( (2*val_1-1) < mat.rows() ) and ...): END \n";
   } //while (  ( (2*val_1-1) < mat.rows() ) and ( (2*val_2-1) < mat.rows() )   )
   BOOST_ASSERT_MSG(S.size() != 0, "S.size() == 0"); 
   
   // Assume that S.size() != 0
+  RowVectorXd mod_S;
   if (LIS_row(2) == 1) {
-    S = S.tail( S.size()-4 );// TODO why remove 4 first elements? why 4?
+    // TODO why remove 4 first elements? why 4?
+    //S = S.tail( S.size()-4 );// THIS IS BUGGY
+    
+    const uint64_t first_idx = 4;
+    mod_S.resize( S.size()-first_idx );
+    for(uint64_t i=first_idx, target_idx= 0; i< S.size(); ++i, ++target_idx) {
+      mod_S(target_idx) = S(i);
+    }
   }
- 
-  for (uint64_t i=0; i<S.size(); ++i ){
-    S(i) = abs(S(i));
+  else {
+    mod_S = S;
+  }
+
+  //MatrixXd S_tail_mat(1, mod_S.size());     
+  //S_tail_mat.row(0) = mod_S;
+  //CSVIO::write(S_tail_mat, "/home/tor/robotics/prj/010/ws/lab1231-ecg-prj/ws/cpp/out/debug/S_tail_mat.csv");
+  
+  //
+  for (uint64_t i=0; i<mod_S.size(); ++i){
+    mod_S(i) = abs( mod_S(i) );
   }
   
   //
+  MatrixXd::Index max_row, max_col;
   double descendant;
-  descendant = S.maxCoeff();
+  descendant = mod_S.maxCoeff(&max_row, &max_col);
+  
+  //cout << "mod_S.size()= " << mod_S.size() << endl;
+  //cout << "max_row= " << max_row << endl;
+  //cout << "max_col= " << max_col << endl;
+  //cout << "mod_S[max_col]= " << mod_S[max_col] << endl;
+  //MatrixXd mod_S_mat(1, mod_S.size());
+  //mod_S_mat.row(0) = mod_S;
+  //CSVIO::write(mod_S_mat, "/home/tor/robotics/prj/010/ws/lab1231-ecg-prj/ws/cpp/out/debug/mod_S.csv");
   
   cout << "get_descendant(): END\n";
   return descendant;
