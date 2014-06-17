@@ -17,8 +17,9 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const std::vector<Eigen::Mat
   
   vector<RowVectorXd> bit_str_all_frames(n_frame);
 
-  const uint8_t n_frame_target = 2;// counted from 0, max = n_frame
-  for (uint8_t i=0; i<n_frame_target; ++i) {
+  const uint8_t ith_frame_begin = 10;// from 0
+  const uint8_t ith_frame_end = 11;// post the end
+  for (uint8_t i=ith_frame_begin; i<ith_frame_end; ++i) {
     cout << "RUNNING SPIHT CODING FOR FRAME ith= " << lexical_cast<string>(i+1) << ": BEGIN zzzzzzzzzzzzzzzzzzzzzzzzzzzz"<< endl;
     RowVectorXd bit_str;
     const uint8_t level = 7;// TODO why 7?
