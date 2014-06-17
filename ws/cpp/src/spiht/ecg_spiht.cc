@@ -16,9 +16,10 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const std::vector<Eigen::Mat
   const uint64_t max_bits = (n_sample*n_lead*res/CR) / n_frame;// Indeed: truncation!
   
   vector<RowVectorXd> bit_str_all_frames(n_frame);
-
+  
+  // FAILED frame ith= 10, 12, 15, 16, 17
   const uint8_t ith_frame_begin = 10;// from 0
-  const uint8_t ith_frame_end = 11;// post the end
+  const uint8_t ith_frame_end = 11;//n_frame;// post the end
   for (uint8_t i=ith_frame_begin; i<ith_frame_end; ++i) {
     cout << "RUNNING SPIHT CODING FOR FRAME ith= " << lexical_cast<string>(i+1) << ": BEGIN zzzzzzzzzzzzzzzzzzzzzzzzzzzz"<< endl;
     RowVectorXd bit_str;
