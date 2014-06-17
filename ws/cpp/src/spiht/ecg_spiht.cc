@@ -17,7 +17,7 @@ std::vector<Eigen::RowVectorXd> ECGSPIHT::run_spiht(const std::vector<Eigen::Mat
   
   vector<RowVectorXd> bit_str_all_frames(n_frame);
 
-  const uint8_t n_frame_target = 1;// counted from 0, max = n_frame
+  const uint8_t n_frame_target = 2;// counted from 0, max = n_frame
   for (uint8_t i=0; i<n_frame_target; ++i) {
     cout << "RUNNING SPIHT CODING FOR FRAME ith= " << lexical_cast<string>(i+1) << ": BEGIN zzzzzzzzzzzzzzzzzzzzzzzzzzzz"<< endl;
     RowVectorXd bit_str;
@@ -148,7 +148,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
 
   //---------------------------coding-----------------------------------
   cout << "coding ....\n";
-  #define DEBUG_ON
+  #define DEBUG_OFF
   
   uint64_t bitctr;// TODO is it bit counter?
   bitctr = 24;// 24 = 3 byte * 8 bit/byte = 24 bits; 3 for the first 3 column in bit_str
@@ -466,7 +466,7 @@ Eigen::RowVectorXd ECGSPIHT::spiht_enc(const Eigen::MatrixXd& wavelet_img, const
       
       string here_innerwhile2_event_1 = here_innerwhile2 + "event-1/";
       
-      Debugger::write_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile2_event_1);
+      //Debugger::write_param("bitctr", EigenLibSupport::scalar2mat(bitctr), here_innerwhile2_event_1);
       if (bitctr >= max_bits) {
         cout << "(bitctr >= max_bits): RETURN\n";
         //#ifdef DEBUG_ON
