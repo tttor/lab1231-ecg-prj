@@ -4,6 +4,7 @@
 #include <util/csv_io.h>
 #include <util/debugger.h>
 #include <util/eigenlib_support.h>
+#include <util/csv_io.h>
 #include <spiht/ecg_spiht.h>
 
 int main(int argc, char **argv) {
