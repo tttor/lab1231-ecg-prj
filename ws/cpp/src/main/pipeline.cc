@@ -7,6 +7,18 @@
 #include <util/csv_io.h>
 #include <spiht/ecg_spiht.h>
 
+/*! \mainpage ECG Analyzer Project of LAB1231 CS UI
+ *
+ * \section intro_sec Introduction
+ * This is the introduction.
+ *
+ * \section install_sec Installation
+ * \subsection step1 Step 1: Opening the box
+ *
+ * \section misc_sec Miscellany
+ * Authors: Grafika Jati, Vektor Dewanto
+ */
+ 
 int main(int argc, char **argv) {
   using namespace std;
   using namespace boost;
