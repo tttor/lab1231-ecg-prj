@@ -636,9 +636,6 @@ double ECGSPIHT::get_descendant(const Eigen::RowVectorXd& LIS_row, const Eigen::
   using namespace boost;
   cout << "get_descendant(): BEGIN\n";
   cout << "input LIS_row= " << LIS_row << endl;
-  //const string csv_dir = "/home/tor/robotics/prj/010/ws/lab1231-ecg-prj/ws/cpp/out/debug/S-in-while/";
-  //boost::filesystem::remove_all( boost::filesystem::path(csv_dir) );
-  //boost::filesystem::create_directories(csv_dir);
   
   // The modification is used to ease the matrix indexing since many indexing formulas below are really _unclear_ about where they come from.
   // As a result, we can treat all indexing formulas as _is_ (exactly the same with those in Matlab).
