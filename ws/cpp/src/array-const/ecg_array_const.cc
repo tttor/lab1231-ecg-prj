@@ -1,97 +1,141 @@
 #include "ecg_array_const.h"
-#include <ecg_file_util.h>
 
 using namespace lab1231_ecg_prj;
 
-char ECGArrayContructor::set_array_to_frame(int sample_num_per_frame,int beat_found, std::vector<double>& data_norm_in, std::vector< std::vector<double> >& frame_all_out, char verbose) {
-using namespace std;
-	cout << "Array to Frame : BEGIN\n";
-	
-  int i,j,k,m,h;
-	int start,end;
-  int lead_num = 8 ;
-  
-  //convert multi to single lead
-	vector<double> one_beat;
-  vector<double> data_single_arrange;
-  vector<double> one_frame;
-
-  int frame_num = floor(data_norm_in.size()/pow(sample_num_per_frame,2));
-  printf("frame_num %d \n", frame_num);    
-   
-  int start_beat_in;
-  
-  for(h=0;h<beat_found;h++){
-    start_beat_in=h*sample_num_per_frame;
-    for(i=0;i<lead_num;i++){
-      start = (i)*(data_norm_in.size()/8)+start_beat_in; 
-      end = start+sample_num_per_frame;
-      for(k=start;k<end;k++){
-        one_beat.push_back(data_norm_in[k]);
-        }
-      for(m=0;m<one_beat.size();m++){
-        data_single_arrange.push_back(one_beat[m]);
-      }
-      one_beat.clear();  
-    }
-  }
-  printf("convert multi to single arrange \n");
-  
-  for(i=0;i<frame_num;i++){
-    start = (i)*pow(sample_num_per_frame,2);
-    end = (i+1)*pow(sample_num_per_frame,2);
-    for(j=start;j<end;j++){
-      one_frame.push_back(data_single_arrange[j]);
-    }
-    frame_all_out.push_back(one_frame);
-    one_frame.clear();
-  }
-  
-  for(i=end;i<(frame_num+1)*pow(sample_num_per_frame,2);i++){
-    if(i<data_single_arrange.size()){
-      one_frame.push_back(data_single_arrange[i]);
-      }else{ //padd with zero
-        one_frame.push_back(0.0);
-      }  
-  }
-  frame_all_out.push_back(one_frame);
-  one_frame.clear();
-  
-  
-  printf("frame all size %d \n", frame_all_out.size());
-
-	cout << "Array to Frame : END\n";
-	
-}
-
-char ECGArrayContructor::set_frame_to_matrix(int sample_num_per_frame, std::vector<double>& frame_in, std::vector< std::vector<double> >& matrix_out){
-  
+std::vector< Eigen::MatrixXd > ECGArrayConstructor::construct(const Eigen::MatrixXd& norm_ecg, const Eigen::MatrixXd& rr_ann, const uint64_t& n_sample_per_beat, const std::string& out_dir_path) {
+  using namespace Eigen;
   using namespace std;
-  cout << "One Frame to Matrix : BEGIN\n";
+  cout << "ECGArrayConstructor::construct(): BEGIN\n";
   
-  int i,j,k;
-  int start,end;
-  vector<double> temp_frame_in;
+  // Convert ECG data from Mat to (very long) Vec (flattening) -----------------------------------------------
+  uint8_t grouping_mode = 0;// 0: no grouping
+  RowVectorXd ecg_vec = mat2vec(norm_ecg, rr_ann, n_sample_per_beat, grouping_mode);
   
-  //for(i=0;i<frame_in.size();i++){
-    //temp_frame_in.push_back(frame_in[i]);
-  //}
+  // Convert ECG data vector into ECG frames------------------------------------------------------------------
+  const uint64_t n_beat = n_sample_per_beat;
+  MatrixXd ecg_frame;
+  ecg_frame = vec2frame(ecg_vec, n_beat);
   
-  for(i=0;i<sample_num_per_frame;i++){
-    start = (i)*sample_num_per_frame;
-    end = start + sample_num_per_frame;
-    for(j=start;j<end;j++){
-      temp_frame_in.push_back(frame_in[j]);
-    }
-    matrix_out.push_back(temp_frame_in);  
-    temp_frame_in.clear();  
-  }
+  // Break down the ECG frame --------------------------------------------------------------------------------
+  // from (n_frame)x(n_beat*n_sample_per_beat) to (n_frame)x(n_beat)x(n_sample_per_bit)
+  vector<MatrixXd> ecg_mat_all_frame(ecg_frame.rows());
+  ecg_mat_all_frame = structure(ecg_frame, n_beat, n_sample_per_beat);
   
-  
-  cout << "One Frame to Matrix : END\n";
+  cout << "ECGArrayConstructor::construct(): END\n";
+  return ecg_mat_all_frame;
 }
 
+std::vector<Eigen::MatrixXd> ECGArrayConstructor::structure(const Eigen::MatrixXd& ecg_frame, const uint64_t& n_beat, const uint64_t& n_sample_per_beat) {
+  using namespace Eigen;
+  using namespace std;
+  cout << "ECGArrayConstructor::structure(): BEGIN\n";
+  
+  const uint64_t n_frame = ecg_frame.rows();
+  
+  vector<MatrixXd> c_mat_all_frame(n_frame);
+  for (uint64_t i=0; i<c_mat_all_frame.size(); ++i) {
+    
+    MatrixXd mat(n_beat, n_sample_per_beat);
+    uint64_t last_idx = 0;//post the end
+    for (uint64_t j=0; j<mat.rows(); ++j) {
+      const RowVectorXd long_vec = ecg_frame.row(i);
+      const uint64_t start_idx = last_idx;
+    
+      mat.row(j) = long_vec.segment(start_idx, n_sample_per_beat);
+      
+      last_idx = start_idx + n_sample_per_beat; 
+    }
+    
+    c_mat_all_frame.at(i) = mat; 
+  }
+  
+  cout << "ECGArrayConstructor::structure(): END\n";
+  return c_mat_all_frame;
+}
 
+Eigen::MatrixXd ECGArrayConstructor::mat2vec(const Eigen::MatrixXd& mat, const Eigen::MatrixXd& rr_ann, const uint64_t& n_sample_per_beat, const uint8_t& grouping_mode) {
+  using namespace std;
+  using namespace Eigen;
+  cout << "ECGArrayConstructor::mat2vec(): BEGIN\n";
+  
+  const uint8_t n_lead = 8;// TODO hardcode 8 here?
+  const uint64_t n_beat = rr_ann.rows() + 1; // +1 to account for (maybe incomplete) last beat
+  //cout << "n_beat= " << n_beat << endl;
+  
+  RowVectorXd vec;
+  switch (grouping_mode) {
+    case 0: {// no grouping
+      for (uint64_t i=0; i<n_beat; ++i) {
+        const uint64_t start_idx = (i*n_sample_per_beat);
+        //const uint64_t end_idx = (i+1)*n_sample_per_beat-1;
+        for (uint64_t j=0; j<n_lead; ++j) {
+          RowVectorXd one_beat;
+          one_beat = mat.row(j).segment(start_idx, n_sample_per_beat);
+          
+          const uint64_t init_target_idx = vec.size();
+          vec.conservativeResize(vec.size()+one_beat.size());
+          for (uint64_t k=0, target_idx= init_target_idx; k<one_beat.size(); ++k, ++target_idx) {
+            vec(target_idx) = one_beat(k);
+          }
+        }
+      }
+      break;
+    }
+    case 1: {
+      assert(false && "group_mode has not been implemented yet :(");
+      //vector<RowVectorXd> groups;
+      //groups.resize(3);
+      
+      //// The assignment belows follow the rule invented by Sani M. Isa
+      //group.at(0) << 1, 7, 8;
+      //group.at(1) << 2, 3;// TODO mirror lead 3
+      //group.at(2) << 4, 5, 6;
+      break;
+    }
+    case 2: {
+      assert(false && "group_mode has not been implemented yet :(");
+      break;
+    }
+    default: {
+      assert(false && "UNKNOWN grouping mode");
+    }
+  }
+  
+  cout << "ECGArrayConstructor::mat2vec(): END\n";
+  return vec;
+}
 
-
-
+Eigen::MatrixXd ECGArrayConstructor::vec2frame(const Eigen::RowVectorXd& ecg_vec, const uint64_t& n_beat) {
+  using namespace Eigen;
+  using namespace std;
+  cout << "ECGArrayConstructor::segment_beat(): BEGIN\n";
+  //cout << "ecg_vec.size()= " << ecg_vec.size() << endl;
+  //cout << "n_beat= " << n_beat << endl;
+  
+  const uint64_t n_sample_per_beat = n_beat; 
+  const uint64_t n_complete_frame = ecg_vec.size() / (n_sample_per_beat*n_beat);// yes, truncate
+  //cout << "n_complete_frame= " << n_complete_frame << endl;
+  
+  MatrixXd ecg_frame(n_complete_frame, n_beat*n_sample_per_beat);
+  for (uint64_t i=0; i<ecg_frame.rows(); ++i) {
+    const uint64_t start_idx = i*(n_beat*n_sample_per_beat);
+    ecg_frame.row(i) = ecg_vec.segment(start_idx, n_beat*n_sample_per_beat);
+  } 
+  //cout << "(ori) ecg_frame.size()= " << ecg_frame.size() << endl;
+  
+  if (ecg_frame.size() < ecg_vec.size()) {
+    cout << "Take care the incomplete last frame; which becomes the last row in ecg_frame\n";
+    RowVectorXd last_frame;
+    last_frame = ecg_vec.segment(ecg_frame.size(), ecg_vec.size()-ecg_frame.size());
+    
+    const uint64_t pad_len = (n_beat*n_sample_per_beat) - last_frame.size();
+    RowVectorXd pad = MatrixXd::Zero(1, pad_len).row(0);
+    
+    ecg_frame.conservativeResize(ecg_frame.rows()+1, ecg_frame.cols());
+    ecg_frame.row(ecg_frame.rows()-1) << last_frame, pad;
+  }
+  //cout << "(padded) ecg_frame.size()= " << ecg_frame.size() << endl;
+  
+  cout << "ECGArrayConstructor::segment_beat(): END\n";
+  return ecg_frame;
+}

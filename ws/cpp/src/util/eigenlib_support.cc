@@ -43,13 +43,20 @@ Eigen::MatrixXd EigenLibSupport::scalar2mat(const double& scalar) {
   return mat;
 }
 
+Eigen::MatrixXd EigenLibSupport::rowvec2mat(const Eigen::RowVectorXd& vec) {
+  Eigen::MatrixXd mat(1,vec.size());// for converting a single scalar to a matrix
+  mat.row(0) = vec;
+  
+  return mat;
+}
+
 double EigenLibSupport::mat2scalar(const Eigen::MatrixXd& mat){
   assert(mat.size()==1);
   return mat(0);
 }
 
-double EigenLibSupport::round(const double& val, const uint8_t& precision, const std::string type) {
-  const uint64_t factor = pow(10, precision);
+double EigenLibSupport::round(const double& val, const uint8_t& n_float_digit, const std::string type) {
+  const uint64_t factor = pow(10, n_float_digit);
   
   double result;
   if (type == "rounded_down"){
@@ -62,7 +69,7 @@ double EigenLibSupport::round(const double& val, const uint8_t& precision, const
     result = ceil(val * factor) / factor;
   }
   else {
-    assert(false && "Unknwon truncation type");
+    assert(false && "Unknown truncation type");
   }
   return result;
 }
@@ -162,4 +169,42 @@ Eigen::MatrixXd EigenLibSupport::shift_mat(Eigen::MatrixXd mat) {
 
   //cout << "EigenLibSupport::shift_mat(): END\n";
   return mat_2;
+}
+
+std::vector< std::vector<double> > EigenLibSupport::mat2stdvec(const Eigen::MatrixXd& mat) {
+  std::vector< std::vector<double> > vec(mat.rows());
+  
+  for (uint64_t i=0; i<vec.size(); ++i) {
+    std::vector<double> row_vec(mat.cols());
+    for (uint64_t j=0; j<row_vec.size(); ++j) {
+      row_vec.at(j) = mat(i,j);
+    }
+    vec.at(i) = row_vec;
+  }
+  
+  return vec;
+}
+
+Eigen::MatrixXd EigenLibSupport::stdvec2mat(const std::vector< std::vector<double> >& vec) {
+  Eigen::MatrixXd mat(vec.size(), vec.at(0).size());
+  
+  for (uint64_t i=0; i<mat.rows(); ++i) {
+    for (uint64_t j=0; j<mat.cols(); ++j) {
+      mat(i,j) = vec.at(i).at(j);
+    }
+  }
+    
+  return mat;
+}
+
+Eigen::MatrixXd EigenLibSupport::round(const Eigen::MatrixXd& mat, const uint8_t& n_float_digit, const std::string type) {
+  Eigen::MatrixXd r_mat(mat.rows(), mat.cols());
+  
+  for (uint64_t i=0; i<mat.rows(); ++i) {
+    for (uint64_t j=0; j<mat.cols(); ++j) {
+      r_mat(i,j) = round(mat(i,j), n_float_digit, type);
+    }
+  }
+  
+  return r_mat;
 }

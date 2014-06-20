@@ -5,10 +5,12 @@ function [ecg_mat, n_ecg1_col, n_frame] = run_array_const(ecg8_norm, rr_ann, sam
     group = 0;
     ecg1 = multi2single(ecg8_norm,rr_ann,sample_num,group);
     n_ecg1_col = size(ecg1, 2);% TODO what is ecg1?
+    dlmwrite(strcat(out_dir, 'array-const/ecg_vec.matlab.csv'), ecg1, 'precision','%10.18f');
     
     % Single lead ECG segmentation into frames
     beat_num = sample_num;
     ecg1_frm = segment_beat(ecg1,beat_num);
+    dlmwrite(strcat(out_dir, 'array-const/ecg_frame.matlab.csv'), ecg1_frm, 'precision','%10.18f');
     
     % ECG frames to 2D ECG matrix conversion
     n_frame = size(ecg1_frm,1);
@@ -22,7 +24,8 @@ function [ecg_mat, n_ecg1_col, n_frame] = run_array_const(ecg8_norm, rr_ann, sam
         filename = strcat(out_dir, 'array-const/array-', int2str(k), '.csv');
         M = ecg_mat{k};
         
-        csvwrite(filename, M);
+%        csvwrite(filename, M);
+        dlmwrite(filename, M, 'precision','%10.18f');
     end
 end
 
