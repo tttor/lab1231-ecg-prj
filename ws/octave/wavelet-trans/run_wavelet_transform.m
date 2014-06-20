@@ -25,10 +25,12 @@ function wavelet_img = run_wavelet_transform(ecg_mat, CR, res, n_frame, out_dir)
     % Save
     for k = 1:n_frame
         wavelet_img_csv = strcat(out_dir, 'wavelet-img/wavelet_img-', int2str(k), '.csv');
-        csvwrite(wavelet_img_csv, wavelet_img{k});
+        %csvwrite(wavelet_img_csv, wavelet_img{k});
+        dlmwrite(wavelet_img_csv, wavelet_img{k}, 'precision','%10.18f') ;
         
         S_csv = strcat(out_dir, 'wavelet-img/S-', int2str(k), '.csv');
-        csvwrite(S_csv, S{k});
+        %csvwrite(S_csv, S{k});
+        %dlmwrite(S_csv, S{k}, 'precision','%10.18f') ;
     end
     
     fprintf(' [OK]\n');

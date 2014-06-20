@@ -1,3 +1,7 @@
-add_library (ecg_array_const ecg_array_const.cc)
+add_library (lab1231ecgprj_array_const ecg_array_const.cc)
 
-include_directories (${LAB1231_ECG_PRJ_SOURCE_DIR}/util) 
+target_link_libraries (lab1231ecgprj_array_const lab1231ecgprj_util)
+
+# add the install targets, invoked by: $ make install
+install (FILES ecg_array_const.h
+         DESTINATION include/array-const)

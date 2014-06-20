@@ -17,7 +17,7 @@ function PRD = run_eval(out_dir, rec_dir, rec_name)
     PRD = get_PRD_all(ecg8_pre', recg8_pre, normalize);
     csvwrite(strcat(out_dir,'eval/PRD'), PRD);
     
-    % Plot
-    duration = 10;
-    plot_cmpr(ecg8_pre', recg8_pre, duration, out_dir);
+    %% Plot
+    %duration = 10;
+    %plot_cmpr(ecg8_pre', recg8_pre, duration, out_dir);
 end
